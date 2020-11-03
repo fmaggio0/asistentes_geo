@@ -16,11 +16,20 @@ const useStyles = makeStyles(() => ({
 
 export default (props) => {
     const classes = useStyles();
+
+    const previousStep = (event) => {
+        props.handlerStep(props.currentStep - 1);
+    };
+
+    const nextStep = (event) => {
+        props.handlerStep(props.currentStep + 1);
+    };
+
     return (
         <>
             <Button
                 className={classes.previous}
-                onClick={props.previousStep}
+                onClick={previousStep}
                 disabled={props.currentStep === 1}
             >
                 Atras
@@ -29,7 +38,7 @@ export default (props) => {
                 variant="contained"
                 color="primary"
                 className={classes.next}
-                onClick={props.nextStep}
+                onClick={nextStep}
                 disabled={props.currentStep === props.totalSteps}
             >
                 Siguiente

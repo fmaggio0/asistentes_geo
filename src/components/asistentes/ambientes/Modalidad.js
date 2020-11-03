@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Box from "@material-ui/core/Box";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
@@ -6,11 +6,6 @@ import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 
 const useStyles = makeStyles((theme360) => ({
-    labelTitle: {
-        color: "#4A4A49",
-        fontWeight: "bold",
-        fontSize: "14px",
-    },
     ToggleButtonGroup: {
         width: "100%",
     },
@@ -21,7 +16,7 @@ const useStyles = makeStyles((theme360) => ({
 
 export default (props) => {
     const classes = useStyles();
-    const [type, setType] = React.useState(() => []);
+    const [type, setType] = useState(() => []);
     const handleType = (event, newType) => {
         setType(newType);
         props.onClick(newType);
@@ -30,7 +25,7 @@ export default (props) => {
     return (
         <div>
             <Box my={3}>
-                <Typography component="label" className={classes.labelTitle}>
+                <Typography component="label" variant="subtitle2">
                     Modalidad
                 </Typography>
             </Box>
@@ -42,16 +37,10 @@ export default (props) => {
                 aria-label="text formatting"
                 className={classes.ToggleButtonGroup}
             >
-                <ToggleButton
-                    value="Free drawing"
-                    className={classes.ToggleButton}
-                >
+                <ToggleButton value="drawing" className={classes.ToggleButton}>
                     Dibujo libre
                 </ToggleButton>
-                <ToggleButton
-                    value="Base layer"
-                    className={classes.ToggleButton}
-                >
+                <ToggleButton value="layer" className={classes.ToggleButton}>
                     Capa base
                 </ToggleButton>
             </ToggleButtonGroup>

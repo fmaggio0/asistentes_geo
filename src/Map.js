@@ -107,7 +107,7 @@ class Map extends Component {
     onEachFeature(feature, layer) {
         layer.on("click", (e) => {
             this.select(e.target);
-            this.state.map.selectedLayer = layer;
+            this.setState((state) => (state.map.selectedLayer = layer));
         });
     }
 
@@ -133,7 +133,7 @@ class Map extends Component {
             var previous = this.state.selected;
         }
         this.state.map.fitBounds(layer.getBounds());
-        this.state.selected = layer;
+        this.setState((state) => (state.map.selectedLayer = layer));
         if (previous) {
             this.dehighlight(previous);
         }

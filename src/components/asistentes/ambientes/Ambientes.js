@@ -1,10 +1,14 @@
-import React from "react";
-import StepWizard from "react-step-wizard";
+import React, { useState } from "react";
 
 /* Componentes */
 import PreviousNextNav from "../../common/PreviousNextNav";
-import Step1 from "./Step1";
 import Step2 from "./Step2";
+/* Componentes */
+import Capa from "./Capa";
+import Lote from "./Lote";
+import Modalidad from "./Modalidad";
+import TipoZona from "./TipoZona";
+import CapaBase from "./CapaBase";
 
 import { makeStyles } from "@material-ui/core/styles";
 import { ThemeProvider } from "@material-ui/core/styles";
@@ -15,6 +19,8 @@ import CardHeader from "@material-ui/core/CardHeader";
 import CardContent from "@material-ui/core/CardContent";
 import IconButton from "@material-ui/core/IconButton";
 import Icon from "@material-ui/core/Icon";
+import Box from "@material-ui/core/Box";
+import Typography from "@material-ui/core/Typography";
 
 const useStyles = makeStyles((theme360) => ({
     root: {
@@ -37,7 +43,21 @@ const useStyles = makeStyles((theme360) => ({
 
 export default (props) => {
     const classes = useStyles();
+    const data = useState([]);
     //const map = useContext(MapContext);
+    const [step, setStep] = useState(1);
+    const handlerCurrentStep = (value) => setStep(value);
+    const [totalSteps, setTotalSteps] = useState(2);
+    const [capa, setCapa] = useState("");
+    const handlerCapa = (value) => setCapa(value);
+    const [lote, setLote] = useState("");
+    const handlerLote = (value) => setLote(value);
+    const [modalidad, setModalidad] = useState("");
+    const handlerModalidad = (value) => setModalidad(value);
+    const [capabase, setCapabase] = useState("");
+    const handlerCapabase = (value) => setCapabase(value);
+    const [tipoZona, setTipoZona] = useState("");
+    const handlerTipoZona = (value) => setTipoZona(value);
 
     React.useEffect(() => {
         const node = loadCSS(
@@ -49,6 +69,40 @@ export default (props) => {
             node.parentNode.removeChild(node);
         };
     }, []);
+
+    const body = (step) => {
+        switch (step) {
+            case 1:
+                return (
+                    <>
+                        <Capa onChangeCapa={handlerCapa} />
+                        <Lote onChangeLote={handlerLote} />
+                        <Modalidad onClick={handlerModalidad} />
+                        {modalidad === "layer" && (
+                            <CapaBase onChangeCapabase={handlerCapabase} />
+                        )}
+                        {(modalidad === "drawing" || capabase.id) && (
+                            <TipoZona onChangeTipoZona={handlerTipoZona} />
+                        )}
+                    </>
+                );
+            case 2:
+                return (
+                    <>
+                        <Box mb={3} display="inline-flex">
+                            <Typography variant="subtitle2">
+                                Tipo de ambiente:
+                            </Typography>
+                            <Typography variant="body1">
+                                {tipoZona.name}
+                            </Typography>
+                        </Box>
+                    </>
+                );
+            default:
+                break;
+        }
+    };
 
     return (
         <ThemeProvider theme={theme360}>
@@ -67,10 +121,12 @@ export default (props) => {
                     title={"Asistente de Ambientes"}
                 />
                 <CardContent className={classes.content}>
-                    <StepWizard nav={<PreviousNextNav />}>
-                        <Step1 />
-                        <Step2 />
-                    </StepWizard>
+                    {body(step)}
+                    <PreviousNextNav
+                        currentStep={step}
+                        totalSteps={totalSteps}
+                        handlerStep={handlerCurrentStep}
+                    />
                 </CardContent>
             </Card>
         </ThemeProvider>

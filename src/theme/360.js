@@ -15,6 +15,15 @@ const theme360 = createMuiTheme({
     },
     typography: {
         useNextVariants: true,
+        subtitle2: {
+            color: "#4A4A49",
+            fontWeight: "bold",
+            fontSize: "14px",
+        },
+        body1: {
+            color: "#4A4A49",
+            fontSize: "14px",
+        },
     },
     spacing: [0, 2, 4, 8, 16, 32],
     //Por componente

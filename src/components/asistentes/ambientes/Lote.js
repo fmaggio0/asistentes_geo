@@ -15,11 +15,6 @@ const useStyles = makeStyles((theme360) => ({
         fontSize: "10px",
         justifyContent: "normal",
     },
-    labelTitle: {
-        color: "#4A4A49",
-        fontWeight: "bold",
-        fontSize: "14px",
-    },
     layerName: {
         width: "100%",
     },
@@ -33,21 +28,6 @@ export default (props) => {
     const classes = useStyles();
     const [selectLayerName, setSelectLayerName] = useState("");
     const map = useContext(MapContext);
-    const handleChange = (event, newType) => {
-        setSelectLayerName(newType);
-        console.log(newType);
-        props.onChangeLote(newType);
-    };
-
-    /*function fieldSelection(layer) {
-        console.log(layer);
-        setSelectLayerName(layer.feature.properties.Field);
-        /*layer.once("click", function (e) {
-            console.log(e);
-            let selectedLayer = e.layer;
-            setSelectLayerName(selectedLayer.feature.properties.Field);
-        });
-    }*/
 
     useEffect(() => {
         //Mejorar...
@@ -55,6 +35,9 @@ export default (props) => {
             map.on("click", function (e) {
                 if (e.target.selectedLayer) {
                     setSelectLayerName(
+                        e.target.selectedLayer.feature.properties.Field
+                    );
+                    props.onChangeLote(
                         e.target.selectedLayer.feature.properties.Field
                     );
                 }
@@ -65,7 +48,7 @@ export default (props) => {
     return (
         <div>
             <Box my={3}>
-                <Typography component="label" className={classes.labelTitle}>
+                <Typography component="label" variant="subtitle2">
                     Lote (seleccione en el mapa)
                 </Typography>
             </Box>
@@ -82,7 +65,9 @@ export default (props) => {
                     size="small"
                     className={classes.layerName}
                     value={selectLayerName}
-                    onChange={handleChange}
+                    InputProps={{
+                        readOnly: true,
+                    }}
                 />
             </Box>
         </div>

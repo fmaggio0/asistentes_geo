@@ -1,29 +1,19 @@
 import React, { useState, useEffect, useContext } from "react";
 import Box from "@material-ui/core/Box";
-import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
-import TipoZona from "./TipoZona";
 import MapContext from "../../../contexts/mapContext";
 import dataCapaBase from "../../../data/capasbase.json";
 import L from "leaflet";
 
-const useStyles = makeStyles((theme360) => ({
-    labelTitle: {
-        color: "#4A4A49",
-        fontWeight: "bold",
-        fontSize: "14px",
-    },
-}));
-
 export default (props) => {
-    const classes = useStyles();
     const [baseLayer, setBaseLayer] = useState([]);
     const [selectedBaseLayer, setSelectedBaseLayer] = useState([]);
 
     const handleChange = (event) => {
         setSelectedBaseLayer(event.target.value);
+        props.onChangeCapabase(event.target.value);
     };
 
     const map = useContext(MapContext);
@@ -42,7 +32,6 @@ export default (props) => {
         //Axios api call para traer geometrias de la capa base
         if (selectedBaseLayer.id) {
             var capabase = new L.GeoJSON(dataCapaBase);
-
             capabase.addTo(map);
         }
         // eslint-disable-next-line
@@ -51,7 +40,7 @@ export default (props) => {
     return (
         <div>
             <Box my={3}>
-                <Typography component="label" className={classes.labelTitle}>
+                <Typography component="label" variant="subtitle2">
                     Capa base
                 </Typography>
             </Box>
@@ -68,8 +57,6 @@ export default (props) => {
                         </MenuItem>
                     ))}
             </Select>
-
-            {selectedBaseLayer.id && <TipoZona />}
         </div>
     );
 };

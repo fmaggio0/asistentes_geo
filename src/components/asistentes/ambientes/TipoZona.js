@@ -1,27 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Box from "@material-ui/core/Box";
-import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import IconButton from "@material-ui/core/IconButton";
 import Icon from "@material-ui/core/Icon";
 import TablaTiposZona from "./TablaTiposZona";
-
-const useStyles = makeStyles((theme360) => ({
-    labelTitle: {
-        color: "#4A4A49",
-        fontWeight: "bold",
-        fontSize: "14px",
-    },
-    icon: {
-        margin: theme360.spacing(0),
-        verticalAlign: "middle",
-    },
-    header: {
-        backgroundColor: "#e0e0e0",
-    },
-}));
 
 const rows = [
     {
@@ -105,12 +89,12 @@ const rows = [
 ];
 
 export default (props) => {
-    const classes = useStyles();
     const [typeZones, setTypeZones] = useState([]);
     const [typeSelected, setTypeSelected] = useState([]);
 
-    const handleType = (event) => {
+    const handleChange = (event) => {
         setTypeSelected(event.target.value);
+        props.onChangeTipoZona(event.target.value);
     };
 
     useEffect(() => {
@@ -121,7 +105,7 @@ export default (props) => {
     return (
         <div>
             <Box my={3}>
-                <Typography component="label" className={classes.labelTitle}>
+                <Typography component="label" variant="subtitle2">
                     Tipo de zona
                 </Typography>
                 <IconButton aria-label="plus">
@@ -140,11 +124,9 @@ export default (props) => {
                 </IconButton>
             </Box>
             <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
                 style={{ minWidth: "100%" }}
                 color="primary"
-                onChange={handleType}
+                onChange={handleChange}
                 value={typeSelected}
             >
                 {typeZones &&
