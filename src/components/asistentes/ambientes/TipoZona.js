@@ -7,7 +7,7 @@ import IconButton from "@material-ui/core/IconButton";
 import Icon from "@material-ui/core/Icon";
 import TablaTiposZona from "./TablaTiposZona";
 
-const rows = [
+const tiposzona = [
     {
         id: 1,
         name: "Ambientes según limitantes",
@@ -92,14 +92,34 @@ export default (props) => {
     const [typeZones, setTypeZones] = useState([]);
     const [typeSelected, setTypeSelected] = useState([]);
 
+    const rows = [];
+
     const handleChange = (event) => {
+        let properties = event.target.value.properties;
+
+        properties.forEach((element) => {
+            let iconColor = (
+                <Icon
+                    fontSize="small"
+                    style={{ color: element.color }}
+                    className="fa fa-circle"
+                />
+            );
+
+            rows.push([element.value, iconColor]);
+        });
+
+        console.log(rows);
+
         setTypeSelected(event.target.value);
         props.onChangeTipoZona(event.target.value);
     };
 
+    const iconPalette = <Icon fontSize="small" className="fa fa-palette" />;
+
     useEffect(() => {
         //Axios call api to set
-        setTypeZones(rows);
+        setTypeZones(tiposzona);
     }, []);
 
     return (
@@ -125,7 +145,6 @@ export default (props) => {
             </Box>
             <Select
                 style={{ minWidth: "100%" }}
-                color="primary"
                 onChange={handleChange}
                 value={typeSelected}
             >
@@ -140,7 +159,7 @@ export default (props) => {
             {/*tipo de zona*/}
 
             {typeSelected.properties && (
-                <TablaTiposZona rows={typeSelected.properties} />
+                <TablaTiposZona headers={["Zona", iconPalette]} rows={rows} />
             )}
         </div>
     );

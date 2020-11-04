@@ -26,7 +26,7 @@ const useStyles = makeStyles((theme360) => ({
 
 export default (props) => {
     const classes = useStyles();
-    const { rows } = props;
+    const { rows, headers } = props;
 
     return (
         <div>
@@ -34,32 +34,26 @@ export default (props) => {
                 <Table className={classes.table} aria-label="simple table">
                     <TableHead className={classes.header}>
                         <TableRow>
-                            <TableCell align="center">Zona</TableCell>
-                            <TableCell align="center">
-                                <Icon
-                                    fontSize="small"
-                                    className="fa fa-palette"
-                                />
-                            </TableCell>
+                            {headers.map((header, index) => (
+                                <TableCell align="center" key={index}>
+                                    {header}
+                                </TableCell>
+                            ))}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {rows.map((row) => (
-                            <TableRow key={row.value}>
-                                <TableCell
-                                    component="th"
-                                    scope="row"
-                                    align="center"
-                                >
-                                    {row.value}
-                                </TableCell>
-                                <TableCell align="center">
-                                    <Icon
-                                        fontSize="small"
-                                        style={{ color: row.color }}
-                                        className="fa fa-circle"
-                                    />
-                                </TableCell>
+                        {rows.map((row, index) => (
+                            <TableRow key={index}>
+                                {row.map((cell, i) => (
+                                    <TableCell
+                                        component="th"
+                                        scope="row"
+                                        align="center"
+                                        key={i}
+                                    >
+                                        {console.log(cell)}
+                                    </TableCell>
+                                ))}
                             </TableRow>
                         ))}
                     </TableBody>

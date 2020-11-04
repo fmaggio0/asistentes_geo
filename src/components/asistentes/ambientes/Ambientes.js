@@ -2,13 +2,12 @@ import React, { useState } from "react";
 
 /* Componentes */
 import PreviousNextNav from "../../common/PreviousNextNav";
-import Step2 from "./Step2";
-/* Componentes */
 import Capa from "./Capa";
 import Lote from "./Lote";
 import Modalidad from "./Modalidad";
 import TipoZona from "./TipoZona";
 import CapaBase from "./CapaBase";
+import SetAmbiente from "./SetAmbiente";
 
 import { makeStyles } from "@material-ui/core/styles";
 import { ThemeProvider } from "@material-ui/core/styles";
@@ -93,10 +92,13 @@ export default (props) => {
                             <Typography variant="subtitle2">
                                 Tipo de ambiente:
                             </Typography>
+                        </Box>
+                        <Box mb={3}>
                             <Typography variant="body1">
                                 {tipoZona.name}
                             </Typography>
                         </Box>
+                        <SetAmbiente ambientes={tipoZona.properties} />
                     </>
                 );
             default:

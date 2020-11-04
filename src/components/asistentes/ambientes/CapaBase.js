@@ -46,7 +46,6 @@ export default (props) => {
             </Box>
             <Select
                 style={{ minWidth: "100%" }}
-                color="primary"
                 onChange={handleChange}
                 value={selectedBaseLayer}
             >
