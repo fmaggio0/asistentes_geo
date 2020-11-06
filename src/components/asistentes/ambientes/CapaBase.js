@@ -7,6 +7,24 @@ import MapContext from "../../../contexts/mapContext";
 import dataCapaBase from "../../../data/capasbase.json";
 import L from "leaflet";
 
+function onEachFeature(feature, layer) {
+    if (feature.properties) {
+        layer.bindTooltip(
+            function (layer) {
+                return (
+                    "<pre>" +
+                    JSON.stringify(feature.properties, null, " ").replace(
+                        /[\{\}"]/g,
+                        ""
+                    ) +
+                    "</pre>"
+                );
+            },
+            { opacity: 0.75, offset: [0, -5], direction: "top", sticky: true } //then add your options
+        );
+    }
+}
+
 export default (props) => {
     const [baseLayer, setBaseLayer] = useState([]);
     const [selectedBaseLayer, setSelectedBaseLayer] = useState([]);
@@ -31,8 +49,11 @@ export default (props) => {
     useEffect(() => {
         //Axios api call para traer geometrias de la capa base
         if (selectedBaseLayer.id) {
-            var capabase = new L.GeoJSON(dataCapaBase);
+            var capabase = new L.GeoJSON(dataCapaBase, {
+                onEachFeature: onEachFeature,
+            });
             capabase.addTo(map);
+            map.baseLayer = capabase;
         }
         // eslint-disable-next-line
     }, [selectedBaseLayer]);

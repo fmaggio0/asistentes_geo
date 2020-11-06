@@ -7,7 +7,8 @@ import Lote from "./Lote";
 import Modalidad from "./Modalidad";
 import TipoZona from "./TipoZona";
 import CapaBase from "./CapaBase";
-import SetAmbiente from "./SetAmbiente";
+import SetAmbienteCapaBase from "./SetAmbienteCapaBase";
+import TablaTiposZona from "./TablaTiposZona";
 
 import { makeStyles } from "@material-ui/core/styles";
 import { ThemeProvider } from "@material-ui/core/styles";
@@ -63,7 +64,6 @@ export default (props) => {
             "https://use.fontawesome.com/releases/v5.12.0/css/all.css",
             document.querySelector("#font-awesome-css")
         );
-
         return () => {
             node.parentNode.removeChild(node);
         };
@@ -85,7 +85,7 @@ export default (props) => {
                         )}
                     </>
                 );
-            case 2:
+            /*case 2:
                 return (
                     <>
                         <Box mb={3} display="inline-flex">
@@ -99,6 +99,12 @@ export default (props) => {
                             </Typography>
                         </Box>
                         <SetAmbiente ambientes={tipoZona.properties} />
+                    </>
+                );*/
+            case 2:
+                return (
+                    <>
+                        <SetAmbienteCapaBase ambientes={tipoZona} />
                     </>
                 );
             default:

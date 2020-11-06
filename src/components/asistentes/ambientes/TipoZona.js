@@ -91,12 +91,12 @@ const tiposzona = [
 export default (props) => {
     const [typeZones, setTypeZones] = useState([]);
     const [typeSelected, setTypeSelected] = useState([]);
-
-    const rows = [];
+    const [rows, setRows] = useState([]);
 
     const handleChange = (event) => {
         let properties = event.target.value.properties;
 
+        setRows([]);
         properties.forEach((element) => {
             let iconColor = (
                 <Icon
@@ -105,11 +105,8 @@ export default (props) => {
                     className="fa fa-circle"
                 />
             );
-
-            rows.push([element.value, iconColor]);
+            setRows((rows) => [...rows, [element.value, iconColor]]);
         });
-
-        console.log(rows);
 
         setTypeSelected(event.target.value);
         props.onChangeTipoZona(event.target.value);

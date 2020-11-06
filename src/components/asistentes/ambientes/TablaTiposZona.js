@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -7,7 +7,6 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-import Icon from "@material-ui/core/Icon";
 
 const useStyles = makeStyles((theme360) => ({
     labelTitle: {
@@ -51,7 +50,7 @@ export default (props) => {
                                         align="center"
                                         key={i}
                                     >
-                                        {console.log(cell)}
+                                        {cell}
                                     </TableCell>
                                 ))}
                             </TableRow>

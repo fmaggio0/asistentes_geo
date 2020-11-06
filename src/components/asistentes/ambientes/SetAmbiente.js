@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Box from "@material-ui/core/Box";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
@@ -6,8 +6,10 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import TextField from "@material-ui/core/TextField";
 
-/* Componentes */
+//Componentes
 import TablaTiposZona from "./TablaTiposZona";
+//Context
+import MapContext from "../../../contexts/mapContext";
 
 const useStyles = makeStyles((theme360) => ({
     labelTitle: {
@@ -21,9 +23,21 @@ export default (props) => {
     const classes = useStyles();
     const [ambiente, setAmbiente] = useState([]);
     const { ambientes } = props;
+    const map = useContext(MapContext);
 
     const handleChange = (event) => {
         setAmbiente(event.target.value);
+        console.log(event.target.value);
+
+        map.baseLayer.on("click", function (e) {
+            console.log(e.layer.setStyle());
+            e.layer.setStyle({
+                fillColor: event.target.value.color,
+                fillOpacity: "1",
+                weight: "1",
+                color: "#000000",
+            });
+        });
     };
 
     return (

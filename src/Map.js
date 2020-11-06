@@ -155,6 +155,7 @@ class Map extends Component {
         ).addTo(map);
 
         map.selectedLayer = null;
+        map.baseLayer = null;
 
         // set our state to include the tile layer
         this.setState({ map, tileLayer });
