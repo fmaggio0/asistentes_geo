@@ -20,7 +20,13 @@ const iconColor = (color) => {
 };
 
 export default (props) => {
-    const [typeSelected, setTypeSelected] = useState([]);
+    const [typeSelected, setTypeSelected] = useState({
+        muybaja: "",
+        baja: "",
+        media: "",
+        alta: "",
+        muyalta: "",
+    });
     const [rows, setRows] = useState([]);
     const rowsRef = useRef(rows);
     const { ambientes } = props;
@@ -32,8 +38,18 @@ export default (props) => {
         let selected = event.target.value;
         changeRow[index[0]][2] = iconColor(event.target.value.color);
         setRows(changeRow);
-        console.log(event.target);
-        //setTypeSelected(selected);
+
+        //let floors = [...typeSelected];
+
+        // Add item to it
+        //floors.push(selected);
+
+        // Set state
+
+        setTypeSelected({
+            ...typeSelected,
+            [event.target.name]: event.target.value,
+        });
 
         map.baseLayer.eachLayer(function (layer) {
             if (layer.feature.properties.Class === index[1]) {
@@ -53,15 +69,17 @@ export default (props) => {
 
     useEffect(() => {
         let createSelect = (index) => {
+            console.log(index);
             return (
                 <Select
-                    style={{ minWidth: "100%" }}
+                    fullWidth
                     onChange={handleChange(index)}
-                    value={typeSelected[index]}
+                    value={typeSelected || ""}
+                    name={index[2]}
                 >
                     {ambientes.properties &&
-                        ambientes.properties.map((item, index) => (
-                            <MenuItem value={item} key={index}>
+                        ambientes.properties.map((item, i) => (
+                            <MenuItem value={item} key={i}>
                                 {item.value}
                             </MenuItem>
                         ))}
@@ -70,11 +88,11 @@ export default (props) => {
         };
 
         let data = [
-            ["Muy baja", createSelect([0, 1]), iconColor("#000000")],
-            ["Baja", createSelect([1, 2]), iconColor("#000000")],
-            ["Media", createSelect([2, 4]), iconColor("#000000")],
-            ["Alta", createSelect([3, 6]), iconColor("#000000")],
-            ["Muy alta", createSelect([4, 7]), iconColor("#000000")],
+            ["Muy baja", createSelect([0, 1, "muybaja"]), iconColor("#000000")],
+            ["Baja", createSelect([1, 2, "baja"]), iconColor("#000000")],
+            ["Media", createSelect([2, 4, "media"]), iconColor("#000000")],
+            ["Alta", createSelect([3, 6, "alta"]), iconColor("#000000")],
+            ["Muy alta", createSelect([4, 7, "muyalta"]), iconColor("#000000")],
         ];
 
         rowsRef.current = data;

@@ -13,22 +13,27 @@ const tiposzona = [
         name: "Ambientes según limitantes",
         properties: [
             {
+                id: 1,
                 value: "A",
                 color: "#b8c85a",
             },
             {
+                id: 2,
                 value: "Bs",
                 color: "#d88a51",
             },
             {
+                id: 3,
                 value: "Bw",
                 color: "#ae9eec",
             },
             {
+                id: 4,
                 value: "Cs",
                 color: "#c85a61",
             },
             {
+                id: 5,
                 value: "Cw",
                 color: "#fe9e0d",
             },
@@ -39,22 +44,27 @@ const tiposzona = [
         name: "Ambientes según limitantes 2",
         properties: [
             {
+                id: 1,
                 value: "CC",
                 color: "#b3c85a",
             },
             {
+                id: 2,
                 value: "Cs",
                 color: "#d22a51",
             },
             {
+                id: 3,
                 value: "Cw",
                 color: "#ae9eec",
             },
             {
+                id: 4,
                 value: "Vs",
                 color: "#c82261",
             },
             {
+                id: 5,
                 value: "Vw",
                 color: "#fe910d",
             },
@@ -65,22 +75,27 @@ const tiposzona = [
         name: "Ambientes según limitantes 3",
         properties: [
             {
+                id: 1,
                 value: "T",
                 color: "#b8ceea",
             },
             {
+                id: 2,
                 value: "Ts",
                 color: "#d8cc51",
             },
             {
+                id: 3,
                 value: "Tw",
                 color: "#ae11ec",
             },
             {
+                id: 4,
                 value: "Ts",
                 color: "#c85a61",
             },
             {
+                id: 5,
                 value: "Tw",
                 color: "#fe330d",
             },

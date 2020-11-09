@@ -14,7 +14,7 @@ function onEachFeature(feature, layer) {
                 return (
                     "<pre>" +
                     JSON.stringify(feature.properties, null, " ").replace(
-                        /[\{\}"]/g,
+                        /[{}"]/g,
                         ""
                     ) +
                     "</pre>"

@@ -8,7 +8,6 @@ import Modalidad from "./Modalidad";
 import TipoZona from "./TipoZona";
 import CapaBase from "./CapaBase";
 import SetAmbienteCapaBase from "./SetAmbienteCapaBase";
-import TablaTiposZona from "./TablaTiposZona";
 
 import { makeStyles } from "@material-ui/core/styles";
 import { ThemeProvider } from "@material-ui/core/styles";
@@ -19,8 +18,6 @@ import CardHeader from "@material-ui/core/CardHeader";
 import CardContent from "@material-ui/core/CardContent";
 import IconButton from "@material-ui/core/IconButton";
 import Icon from "@material-ui/core/Icon";
-import Box from "@material-ui/core/Box";
-import Typography from "@material-ui/core/Typography";
 
 const useStyles = makeStyles((theme360) => ({
     root: {
