@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
-import { makeStyles } from "@material-ui/core/styles";
 import Icon from "@material-ui/core/Icon";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
@@ -8,14 +7,6 @@ import MenuItem from "@material-ui/core/MenuItem";
 import TablaTiposZona from "./TablaTiposZona";
 //Context
 import MapContext from "../../../contexts/mapContext";
-
-const useStyles = makeStyles((theme360) => ({
-    labelTitle: {
-        color: "#4A4A49",
-        fontWeight: "bold",
-        fontSize: "14px",
-    },
-}));
 
 const iconPalette = <Icon fontSize="small" className="fa fa-palette" />;
 const iconColor = (color) => {
@@ -29,9 +20,7 @@ const iconColor = (color) => {
 };
 
 export default (props) => {
-    const classes = useStyles();
-    const [ambiente, setAmbiente] = useState([]);
-    const [select, setSelect] = useState([]);
+    const [typeSelected, setTypeSelected] = useState([]);
     const [rows, setRows] = useState([]);
     const rowsRef = useRef(rows);
     const { ambientes } = props;
@@ -40,8 +29,11 @@ export default (props) => {
 
     const handleChange = (index) => (event) => {
         let changeRow = [...rowsRef.current];
+        let selected = event.target.value;
         changeRow[index[0]][2] = iconColor(event.target.value.color);
         setRows(changeRow);
+        console.log(event.target);
+        //setTypeSelected(selected);
 
         map.baseLayer.eachLayer(function (layer) {
             if (layer.feature.properties.Class === index[1]) {
@@ -56,16 +48,20 @@ export default (props) => {
     };
 
     useEffect(() => {
+        console.log(typeSelected);
+    }, [typeSelected]);
+
+    useEffect(() => {
         let createSelect = (index) => {
             return (
                 <Select
                     style={{ minWidth: "100%" }}
                     onChange={handleChange(index)}
-                    //value={typeSelected}
+                    value={typeSelected[index]}
                 >
                     {ambientes.properties &&
-                        ambientes.properties.map((item) => (
-                            <MenuItem value={item} key={item.value}>
+                        ambientes.properties.map((item, index) => (
+                            <MenuItem value={item} key={index}>
                                 {item.value}
                             </MenuItem>
                         ))}
