@@ -8,6 +8,7 @@ import Modalidad from "./Modalidad";
 import TipoZona from "./TipoZona";
 import CapaBase from "./CapaBase";
 import SetAmbienteCapaBase from "./SetAmbienteCapaBase";
+import SetAmbienteDrawing from "./SetAmbienteDrawing";
 
 import { makeStyles } from "@material-ui/core/styles";
 import { ThemeProvider } from "@material-ui/core/styles";
@@ -18,6 +19,7 @@ import CardHeader from "@material-ui/core/CardHeader";
 import CardContent from "@material-ui/core/CardContent";
 import IconButton from "@material-ui/core/IconButton";
 import Icon from "@material-ui/core/Icon";
+import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles((theme360) => ({
     root: {
@@ -36,13 +38,20 @@ const useStyles = makeStyles((theme360) => ({
     cancel: {
         marginTop: "0px",
     },
+    next: {
+        position: "absolute",
+        right: "15px",
+        bottom: "15px",
+        float: "right",
+    },
+    previous: { position: "absolute", left: "15px", bottom: "15px" },
 }));
 
 export default (props) => {
     const classes = useStyles();
     const data = useState([]);
     //const map = useContext(MapContext);
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState("init");
     const handlerCurrentStep = (value) => setStep(value);
     const [totalSteps, setTotalSteps] = useState(2);
     const [capa, setCapa] = useState("");
@@ -68,7 +77,7 @@ export default (props) => {
 
     const body = (step) => {
         switch (step) {
-            case 1:
+            case "init":
                 return (
                     <>
                         <Capa onChangeCapa={handlerCapa} />
@@ -82,23 +91,14 @@ export default (props) => {
                         )}
                     </>
                 );
-            /*case 2:
+            case "setAmbienteDrawing":
+                console.log("asd");
                 return (
                     <>
-                        <Box mb={3} display="inline-flex">
-                            <Typography variant="subtitle2">
-                                Tipo de ambiente:
-                            </Typography>
-                        </Box>
-                        <Box mb={3}>
-                            <Typography variant="body1">
-                                {tipoZona.name}
-                            </Typography>
-                        </Box>
-                        <SetAmbiente ambientes={tipoZona.properties} />
+                        <SetAmbienteDrawing ambientes={tipoZona} />
                     </>
-                );*/
-            case 2:
+                );
+            case "setAmbienteCapaBase":
                 return (
                     <>
                         <SetAmbienteCapaBase ambientes={tipoZona} />
@@ -107,6 +107,20 @@ export default (props) => {
             default:
                 break;
         }
+    };
+
+    const nextStep = () => {
+        if (modalidad === "layer") {
+            setStep("setAmbienteCapaBase");
+        }
+
+        if (modalidad === "drawing") {
+            setStep("setAmbienteDrawing");
+        }
+    };
+
+    const previousStep = () => {
+        setStep("init");
     };
 
     return (
@@ -127,11 +141,28 @@ export default (props) => {
                 />
                 <CardContent className={classes.content}>
                     {body(step)}
-                    <PreviousNextNav
+                    <Button
+                        className={classes.previous}
+                        onClick={previousStep}
+                        disabled={step === "init"}
+                    >
+                        Atras
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.next}
+                        onClick={nextStep}
+                        disabled={step !== "init"}
+                    >
+                        Siguiente
+                    </Button>
+
+                    {/*<PreviousNextNav
                         currentStep={step}
                         totalSteps={totalSteps}
                         handlerStep={handlerCurrentStep}
-                    />
+                    />*/}
                 </CardContent>
             </Card>
         </ThemeProvider>

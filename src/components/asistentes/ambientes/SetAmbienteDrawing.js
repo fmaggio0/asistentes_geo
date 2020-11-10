@@ -27,7 +27,6 @@ export default (props) => {
 
     const handleChange = (event) => {
         setAmbiente(event.target.value);
-        console.log(event.target.value);
 
         map.baseLayer.on("click", function (e) {
             console.log(e.layer.setStyle());
@@ -42,19 +41,25 @@ export default (props) => {
 
     return (
         <>
-            <Box mb={4}>
+            <Box mb={3} display="inline-flex">
+                <Typography variant="subtitle2">Tipo de ambiente:</Typography>
+            </Box>
+            <Box mb={3}>
+                <Typography variant="body1">{ambientes.name}</Typography>
+            </Box>
+            <Box my={4}>
                 <Typography component="label" className={classes.labelTitle}>
-                    Tipo de ambiente:
+                    Ambiente:
                 </Typography>
             </Box>
             <Select
                 style={{ minWidth: "100%" }}
                 color="primary"
-                onChange={handleChange}
-                value={ambiente}
+                //onChange={handleChange}
+                //value={ambiente}
             >
-                {ambientes &&
-                    ambientes.map((row) => (
+                {ambientes.properties &&
+                    ambientes.properties.map((row) => (
                         <MenuItem value={row} key={row.value}>
                             {row.value}
                         </MenuItem>

@@ -132,8 +132,10 @@ class Map extends Component {
         if (this.state.selected !== null) {
             var previous = this.state.selected;
         }
+
         this.state.map.fitBounds(layer.getBounds());
         this.setState((state) => (state.map.selectedLayer = layer));
+        this.setState((state) => (state.selected = layer));
         if (previous) {
             this.dehighlight(previous);
         }
