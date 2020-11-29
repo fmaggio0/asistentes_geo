@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 /* Componentes */
-import PreviousNextNav from "../../common/PreviousNextNav";
 import Capa from "./Capa";
 import Lote from "./Lote";
 import Modalidad from "./Modalidad";
@@ -11,8 +10,6 @@ import SetAmbienteCapaBase from "./SetAmbienteCapaBase";
 import SetAmbienteDrawing from "./SetAmbienteDrawing";
 
 import { makeStyles } from "@material-ui/core/styles";
-import { ThemeProvider } from "@material-ui/core/styles";
-import theme360 from "../../../theme/360";
 import { loadCSS } from "fg-loadcss";
 import Card from "@material-ui/core/Card";
 import CardHeader from "@material-ui/core/CardHeader";
@@ -49,11 +46,7 @@ const useStyles = makeStyles((theme360) => ({
 
 export default (props) => {
     const classes = useStyles();
-    const data = useState([]);
-    //const map = useContext(MapContext);
     const [step, setStep] = useState("init");
-    const handlerCurrentStep = (value) => setStep(value);
-    const [totalSteps, setTotalSteps] = useState(2);
     const [capa, setCapa] = useState("");
     const handlerCapa = (value) => setCapa(value);
     const [lote, setLote] = useState("");
@@ -65,7 +58,11 @@ export default (props) => {
     const [tipoZona, setTipoZona] = useState("");
     const handlerTipoZona = (value) => setTipoZona(value);
 
-    React.useEffect(() => {
+    const handleClose = () => {
+        props.onHandleClose(false);
+    };
+
+    useEffect(() => {
         const node = loadCSS(
             "https://use.fontawesome.com/releases/v5.12.0/css/all.css",
             document.querySelector("#font-awesome-css")
@@ -73,6 +70,11 @@ export default (props) => {
         return () => {
             node.parentNode.removeChild(node);
         };
+    }, []);
+
+    useEffect(() => {
+        console.log("montado");
+        return () => console.log("unmontado");
     }, []);
 
     const body = (step) => {
@@ -89,10 +91,24 @@ export default (props) => {
                         {(modalidad === "drawing" || capabase.id) && (
                             <TipoZona onChangeTipoZona={handlerTipoZona} />
                         )}
+
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className={classes.next}
+                            onClick={nextStep}
+                            disabled={
+                                capa === "" ||
+                                lote === "" ||
+                                modalidad === "" ||
+                                tipoZona === ""
+                            }
+                        >
+                            Siguiente
+                        </Button>
                     </>
                 );
             case "setAmbienteDrawing":
-                console.log("asd");
                 return (
                     <>
                         <SetAmbienteDrawing ambientes={tipoZona} />
@@ -117,6 +133,10 @@ export default (props) => {
         if (modalidad === "drawing") {
             setStep("setAmbienteDrawing");
         }
+
+        if (step === "setAmbienteCapaBase") {
+            setStep("generateAmbienteByCapaBase");
+        }
     };
 
     const previousStep = () => {
@@ -124,47 +144,30 @@ export default (props) => {
     };
 
     return (
-        <ThemeProvider theme={theme360}>
-            <Card id="ambientes" className={classes.root}>
-                <CardHeader
-                    classes={{ action: classes.cancel }}
-                    action={
-                        <IconButton aria-label="settings">
-                            <Icon
-                                fontSize="small"
-                                style={{ color: "#ffffff" }}
-                                className="fa fa-times-circle"
-                            />
-                        </IconButton>
-                    }
-                    title={"Asistente de Ambientes"}
-                />
-                <CardContent className={classes.content}>
-                    {body(step)}
-                    <Button
-                        className={classes.previous}
-                        onClick={previousStep}
-                        disabled={step === "init"}
-                    >
-                        Atras
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        className={classes.next}
-                        onClick={nextStep}
-                        disabled={step !== "init"}
-                    >
-                        Siguiente
-                    </Button>
-
-                    {/*<PreviousNextNav
-                        currentStep={step}
-                        totalSteps={totalSteps}
-                        handlerStep={handlerCurrentStep}
-                    />*/}
-                </CardContent>
-            </Card>
-        </ThemeProvider>
+        <Card id="ambientes" className={classes.root}>
+            <CardHeader
+                classes={{ action: classes.cancel }}
+                action={
+                    <IconButton aria-label="settings" onClick={handleClose}>
+                        <Icon
+                            fontSize="small"
+                            style={{ color: "#ffffff" }}
+                            className="fa fa-times-circle"
+                        />
+                    </IconButton>
+                }
+                title={"Asistente de Ambientes"}
+            />
+            <CardContent className={classes.content}>
+                {body(step)}
+                <Button
+                    className={classes.previous}
+                    onClick={previousStep}
+                    disabled={step === "init"}
+                >
+                    Atras
+                </Button>
+            </CardContent>
+        </Card>
     );
 };

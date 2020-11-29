@@ -37,67 +37,57 @@ const tiposzona = [
                 value: "Cw",
                 color: "#fe9e0d",
             },
+            {
+                id: 6,
+                value: "Cws",
+                color: "#fe9e0d",
+            },
         ],
     },
     {
         id: 2,
-        name: "Ambientes según limitantes 2",
+        name: "Ambientes según topo",
         properties: [
             {
                 id: 1,
-                value: "CC",
-                color: "#b3c85a",
+                value: "Alta",
+                color: "#ff0000",
             },
             {
                 id: 2,
-                value: "Cs",
-                color: "#d22a51",
+                value: "Media",
+                color: "#ffff00",
             },
             {
                 id: 3,
-                value: "Cw",
-                color: "#ae9eec",
-            },
-            {
-                id: 4,
-                value: "Vs",
-                color: "#c82261",
-            },
-            {
-                id: 5,
-                value: "Vw",
-                color: "#fe910d",
+                value: "Baja",
+                color: "#63ff00",
             },
         ],
     },
     {
         id: 3,
-        name: "Ambientes según limitantes 3",
+        name: "Ambientes según Malezas",
         properties: [
             {
                 id: 1,
-                value: "T",
-                color: "#b8ceea",
+                value: "Sin Maleza",
+                color: "#63ff00",
             },
             {
                 id: 2,
-                value: "Ts",
-                color: "#d8cc51",
+                value: "Maleza Baja",
+                color: "#ffff00",
             },
             {
                 id: 3,
-                value: "Tw",
-                color: "#ae11ec",
+                value: "Maleza Media",
+                color: "#ffc100",
             },
             {
                 id: 4,
-                value: "Ts",
-                color: "#c85a61",
-            },
-            {
-                id: 5,
-                value: "Tw",
-                color: "#fe330d",
+                value: "Maleza Alta",
+                color: "#ff0000",
             },
         ],
     },
@@ -167,8 +157,6 @@ export default (props) => {
                         </MenuItem>
                     ))}
             </Select>
-
-            {/*tipo de zona*/}
 
             {typeSelected.properties && (
                 <TablaTiposZona headers={["Zona", iconPalette]} rows={rows} />

@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import geojson from "./data/bk_subway_entrances.json";
 import lotes from "./data/Fields.json";
 //Import asistentes
-import Ambientes from "./components/asistentes/ambientes/Ambientes";
+import Ambientes from "./components/asistentes/ambientes/Index";
 import { MapProvider } from "./contexts/mapContext";
 
 // store the map configuration properties in an object,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
+import React, { useState, useContext } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Icon from "@material-ui/core/Icon";
 import Select from "@material-ui/core/Select";
@@ -10,9 +10,10 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
+import Button from "@material-ui/core/Button";
+import { featureCollection } from "@turf/helpers";
+import FormHelperText from "@material-ui/core/FormHelperText";
 
-//Componentes
-import TablaTiposZona from "./TablaTiposZona";
 //Context
 import MapContext from "../../../contexts/mapContext";
 
@@ -29,6 +30,12 @@ const useStyles = makeStyles((theme360) => ({
     header: {
         backgroundColor: "#e0e0e0",
     },
+    next: {
+        position: "absolute",
+        right: "15px",
+        bottom: "15px",
+        float: "right",
+    },
 }));
 
 const iconPalette = <Icon fontSize="small" className="fa fa-palette" />;
@@ -42,12 +49,49 @@ const iconColor = (color) => {
         />
     );
 };
+
+const label = (text, helperText) => {
+    return (
+        <>
+            {text}
+            <FormHelperText style={{ marginTop: "0px", textAlign: "center" }}>
+                {helperText}
+            </FormHelperText>
+        </>
+    );
+};
+
 const data = [
-    { name: "muybaja", label: "Muy baja", class: 1, color: "#000000" },
-    { name: "baja", label: "Baja", class: 2, color: "#000000" },
-    { name: "media", label: "Media", class: 4, color: "#000000" },
-    { name: "alta", label: "Alta", class: 6, color: "#000000" },
-    { name: "muyalta", label: "Muy alta", class: 7, color: "#000000" },
+    {
+        name: "muybaja",
+        label: label("Muy baja", "(xx has - xx %)"),
+        class: 1,
+        color: "#000000",
+    },
+    {
+        name: "baja",
+        label: label("Baja", "(xx has - xx %)"),
+        class: 2,
+        color: "#000000",
+    },
+    {
+        name: "media",
+        label: label("Media", "(xx has - xx %)"),
+        class: 4,
+        color: "#000000",
+    },
+    {
+        name: "alta",
+        label: label("Alta", "(xx has - xx %)"),
+        class: 6,
+        color: "#000000",
+    },
+    {
+        name: "muyalta",
+        label: label("Muy alta", "(xx has - xx %)"),
+        class: 7,
+        color: "#000000",
+    },
 ];
 
 export default (props) => {
@@ -61,6 +105,7 @@ export default (props) => {
     });
     const [rows, setRows] = useState(data);
     const { ambientes } = props;
+    const [featureGroupAmbientes, setFeatureGroupAmbientes] = useState([]);
 
     const map = useContext(MapContext);
 
@@ -77,8 +122,34 @@ export default (props) => {
             [row.name]: selected,
         });
 
+        let setAmbientesLayers = [];
+
         map.baseLayer.eachLayer(function (layer) {
             if (layer.feature.properties.Class === row.class) {
+                let foundIndex = featureGroupAmbientes.findIndex(
+                    (x) => x.id === layer._leaflet_id
+                );
+
+                let properties = {};
+                properties["Id tipo ambientes"] = ambientes.id;
+                properties["Tipo ambiente"] = ambientes.name;
+                properties["Id ambiente"] = selected.id;
+                properties["Nombre ambiente"] = selected.value;
+                properties["Notas"] = "";
+
+                if (foundIndex !== -1) {
+                    let old = featureGroupAmbientes[foundIndex];
+                    let clone = [...featureGroupAmbientes];
+                    old.properties = properties;
+                    clone[foundIndex] = old;
+                    setFeatureGroupAmbientes(clone);
+                } else {
+                    let layergeo = layer.toGeoJSON();
+                    layergeo.id = layer._leaflet_id;
+                    layergeo.properties = properties;
+                    setAmbientesLayers.push(layergeo);
+                }
+
                 layer.setStyle({
                     fillColor: selected.color,
                     fillOpacity: "1",
@@ -87,7 +158,19 @@ export default (props) => {
                 });
             }
         });
+
+        const combined2 = [...setAmbientesLayers, ...featureGroupAmbientes];
+        setFeatureGroupAmbientes(combined2);
     };
+
+    const finish = () => {
+        const resultBaseLayer = featureCollection(featureGroupAmbientes);
+        console.log(resultBaseLayer);
+    };
+
+    /*useEffect(() => {
+        console.log(typeSelected);
+    }, [typeSelected]);*/
 
     return (
         <>
@@ -146,6 +229,15 @@ export default (props) => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Button
+                variant="contained"
+                color="primary"
+                className={classes.next}
+                onClick={finish}
+            >
+                Finalizar
+            </Button>
         </>
     );
 };
