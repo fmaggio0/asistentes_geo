@@ -6,8 +6,8 @@ import 'leaflet/dist/leaflet.css';
 import geojson from 'src/data/bk_subway_entrances.json';
 import lotes from 'src/data/Fields.json';
 //Import asistentes
-//import Ambientes from './components/asistentes/ambientes/Index';
-import { MapProvider } from 'src/contexts/mapContext';
+import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
+import { MapProvider } from 'src/contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
 // store the map configuration properties in an object,
@@ -177,7 +177,9 @@ class Map extends Component {
     const { classes } = this.props;
     return (
       <div id="mapUI">
-        <MapProvider value={this.state.map}>{/*<Ambientes />*/}</MapProvider>
+        <MapProvider value={this.state.map}>
+          <ButtonActionAmbientes />
+        </MapProvider>
         <div
           ref={node => (this._mapNode = node)}
           id="map"

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Container, Grid, makeStyles } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core';
 import Page from 'src/components/Page';
 import Map from 'src/views/home/MapView/Map';
 
@@ -18,7 +18,7 @@ const DashboardView = () => {
   const pageRef = useRef(null);
 
   return (
-    <Page className={classes.root} title="Chat" ref={pageRef}>
+    <Page className={classes.root} title="Map" ref={pageRef}>
       <Map />
     </Page>
   );

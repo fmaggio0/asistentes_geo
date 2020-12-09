@@ -6,10 +6,8 @@ import {
   Avatar,
   Box,
   ButtonBase,
-  Hidden,
   Menu,
   MenuItem,
-  Typography,
   makeStyles
 } from '@material-ui/core';
 import useAuth from 'src/hooks/useAuth';

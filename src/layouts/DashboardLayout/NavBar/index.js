@@ -36,13 +36,24 @@ import {
   MessageCircle as MessageCircleIcon,
   PieChart as PieChartIcon,
   Share2 as ShareIcon,
-  Users as UsersIcon
+  Users as UsersIcon,
+  Map as MapIcon
 } from 'react-feather';
 import Logo from 'src/components/Logo';
 import useAuth from 'src/hooks/useAuth';
 import NavItem from './NavItem';
 
 const sections = [
+  {
+    subheader: '',
+    items: [
+      {
+        title: 'App',
+        icon: MapIcon,
+        href: '/app'
+      }
+    ]
+  },
   {
     subheader: 'Reports',
     items: [
@@ -411,15 +422,15 @@ const NavBar = ({ onMobileClose, openMobile }) => {
         <Box p={2}>
           <Box p={2} borderRadius="borderRadius" bgcolor="background.dark">
             <Typography variant="h6" color="textPrimary">
-              Need Help?
+              Necesita ayuda?
             </Typography>
             <Link
               variant="subtitle1"
               color="secondary"
               component={RouterLink}
-              to="/docs"
+              to="support.geoagro.com"
             >
-              Check our docs
+              Base de conocimientos
             </Link>
           </Box>
         </Box>
