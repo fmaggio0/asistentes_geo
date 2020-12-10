@@ -7,7 +7,7 @@ import geojson from 'src/data/bk_subway_entrances.json';
 import lotes from 'src/data/Fields.json';
 //Import asistentes
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
-import { MapProvider } from 'src/contexts/MapContext';
+import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
 // store the map configuration properties in an object,

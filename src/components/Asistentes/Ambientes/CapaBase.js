@@ -49,11 +49,11 @@ export default props => {
     if (selectedBaseLayer.length === 0 && capabase) {
       setSelectedBaseLayer(capabase.id);
     }
-  }, [capabase]);
+  }, [capabase, selectedBaseLayer]);
 
   useEffect(() => {
     //Axios api call para traer geometrias de la capa base
-    if (selectedBaseLayer > 0) {
+    if (selectedBaseLayer > 0 && map.baseLayer === null) {
       var capabase = new L.GeoJSON(dataCapaBase, {
         onEachFeature: onEachFeature
       });

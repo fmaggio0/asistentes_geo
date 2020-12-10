@@ -56,32 +56,27 @@ const data = [
   {
     name: 'muybaja',
     label: label('Muy baja', '(xx has - xx %)'),
-    class: 1,
-    color: '#000000'
+    class: 1
   },
   {
     name: 'baja',
     label: label('Baja', '(xx has - xx %)'),
-    class: 2,
-    color: '#000000'
+    class: 2
   },
   {
     name: 'media',
     label: label('Media', '(xx has - xx %)'),
-    class: 4,
-    color: '#000000'
+    class: 4
   },
   {
     name: 'alta',
     label: label('Alta', '(xx has - xx %)'),
-    class: 6,
-    color: '#000000'
+    class: 6
   },
   {
     name: 'muyalta',
     label: label('Muy alta', '(xx has - xx %)'),
-    class: 7,
-    color: '#000000'
+    class: 7
   }
 ];
 
@@ -93,19 +88,20 @@ const download = (content, fileName, contentType) => {
   a.click();
 };
 
+const types = {
+  muybaja: '',
+  baja: '',
+  media: '',
+  alta: '',
+  muyalta: ''
+};
+
 export default props => {
   const classes = useStyles();
-  const [typeSelected, setTypeSelected] = useState({
-    muybaja: '',
-    baja: '',
-    media: '',
-    alta: '',
-    muyalta: ''
-  });
+  const [typeSelected, setTypeSelected] = useState(types);
   const [rows, setRows] = useState(data);
   const { ambientes } = props;
   const [featureGroupAmbientes, setFeatureGroupAmbientes] = useState([]);
-
   const map = useContext(MapContext);
 
   const handleChange = row => event => {
@@ -167,6 +163,13 @@ export default props => {
     console.log(resultBaseLayer);
     download(JSON.stringify(resultBaseLayer), 'result.geojson', 'text/plain');
   };
+
+  /*useEffect(() => {
+    console.log('render');
+    setTypeSelected(types);
+    console.log(data);
+    setRows(data);
+  }, []);*/
 
   return (
     <>
