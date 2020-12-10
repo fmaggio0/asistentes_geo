@@ -328,26 +328,13 @@ const routes = [
         component: () => <Redirect to="/404" />
       }
     ]
-  }
-  /*{
+  },
+  {
+    exact: true,
+    guard: GuestGuard,
     path: '*',
-    layout: MainLayout,
-    routes: [
-      {
-        exact: true,
-        path: '/',
-        component: HomeView
-      },
-      {
-        exact: true,
-        path: '/pricing',
-        component: lazy(() => import('src/views/pricing/PricingView'))
-      },
-      {
-        component: () => <Redirect to="/404" />
-      }
-    ]
-  }*/
+    component: lazy(() => import('src/views/auth/LoginView'))
+  }
 ];
 
 export default routes;
