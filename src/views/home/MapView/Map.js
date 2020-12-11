@@ -46,6 +46,7 @@ class Map extends Component {
     this.state = {
       map: null,
       tileLayer: null,
+      layersGroups: [],
       geojsonLayer: null,
       geojson: null,
       numEntrances: null,
@@ -103,8 +104,18 @@ class Map extends Component {
     });
     // add our GeoJSON layer to the Leaflet map object
     geojsonLayer.addTo(this.state.map);
+
+    //lotes
+    let layer = {
+      name: 'Lotes',
+      layer: geojsonLayer
+    };
     // store the Leaflet GeoJSON layer in our component state for use later
-    this.setState({ geojsonLayer });
+    this.setState({
+      geojsonLayer,
+      layersGroups: [...this.state.layersGroups, layer]
+    });
+
     // fit the geographic extent of the GeoJSON layer within the map's bounds / viewport
     this.zoomToFeature(geojsonLayer);
   }
