@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 // using webpack json loader we can import our geojson file like this
 import lotes from 'src/data/Fields.json';
 //Import asistentes
@@ -25,7 +26,7 @@ config.params = {
 
 const useStyles = makeStyles(() => ({
   map: {
-    position: 'absolute',
+    position: 'absolute !important',
     top: 0,
     bottom: 0,
     left: 0,
@@ -46,16 +47,17 @@ const Map = () => {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/satellite-v9',
-      center: [-79.38, 43.65],
-      zoom: 12.5
+      center: [11.195646, -22.428401],
+      zoom: 2
     });
 
-    map.on('load', () => {
-      setMap(map);
+    let hoveredStateId = null;
 
+    map.on('load', () => {
       map.addSource('lotes', {
         type: 'geojson',
-        data: lotes
+        data: lotes,
+        generateId: true
       });
 
       map.addLayer({
@@ -68,55 +70,61 @@ const Map = () => {
           'fill-opacity': 0.8
         }
       });
+
+      map.addLayer({
+        id: 'seledtedLote',
+        type: 'line',
+        source: 'lotes',
+        paint: {
+          'line-color': [
+            'case',
+            ['boolean', ['feature-state', 'click'], false],
+            '#000',
+            '#2e6fd9'
+          ],
+          'line-width': [
+            'case',
+            ['boolean', ['feature-state', 'click'], false],
+            4,
+            1
+          ]
+        }
+      });
+
+      setMap(map);
     });
 
     map.on('sourcedata', function(e) {
       if (e.isSourceLoaded && e.sourceDataType === 'visibility') {
-        console.log(e);
-        fitBounds(e.source.data);
+        let bbox = turf.bbox(e.source.data);
+        map.fitBounds(bbox, { padding: 20 });
       }
     });
 
-    // change cursor to pointer when user hovers over a clickable feature
-    /*map.on('mouseenter', e => {
-      if (e.features.length) {
-        map.getCanvas().style.cursor = 'pointer';
+    /*this function would then be used to change the 'click' feature state
+when the feature is clicked on*/
+    map.on('click', 'lotes', function(e) {
+      console.log(e);
+      var features = map.queryRenderedFeatures(e.point, { layers: ['lotes'] });
+      console.log(features);
+      for (var i = 0; i < features.length; i++) {
+        map.setFeatureState(
+          { source: 'lotes', id: features[i].id },
+          { click: true }
+        );
       }
     });
-
-    // reset cursor to default when user is no longer hovering over a clickable feature
-    map.on('mouseleave', () => {
-      map.getCanvas().style.cursor = '';
-    });
-
-    // add tooltip when users mouse move over a point
-    map.on('mousemove', e => {
-      const features = map.queryRenderedFeatures(e.point);
-      if (features.length) {
-        const feature = features[0];
-
-        // Create tooltip node
-        const tooltipNode = document.createElement('div');
-        ReactDOM.render(<Tooltip feature={feature} />, tooltipNode);
-
-        // Set tooltip on map
-        tooltipRef.current
-          .setLngLat(e.lngLat)
-          .setDOMContent(tooltipNode)
-          .addTo(map);
-      }
-    });*/
 
     // Clean up on unmount
     return () => map.remove();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fitBounds = geojson => {
-    let bbox = turf.bbox(geojson);
-    console.log(bbox);
-    console.log(map);
-    map.fitBounds(bbox, { padding: 20 });
-  };
+  /*const fitBounds = geojson => {
+    if (map) {
+      let bbox = turf.bbox(geojson);
+      map.fitBounds(bbox, { padding: 20 });
+    }
+  };*/
 
   return (
     <div id="mapUI">
