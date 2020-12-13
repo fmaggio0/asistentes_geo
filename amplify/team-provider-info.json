@@ -1,0 +1,15 @@
+{
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-360asesor-prod-105407-authRole",
+      "UnauthRoleArn": "arn:aws:iam::995513503320:role/amplify-360asesor-prod-105407-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::995513503320:role/amplify-360asesor-prod-105407-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-360asesor-prod-105407-deployment",
+      "UnauthRoleName": "amplify-360asesor-prod-105407-unauthRole",
+      "StackName": "amplify-360asesor-prod-105407",
+      "StackId": "arn:aws:cloudformation:us-east-2:995513503320:stack/amplify-360asesor-prod-105407/af41a040-3d4a-11eb-96e4-026856bf7736",
+      "AmplifyAppId": "d121wp9kns4wd8"
+    }
+  }
+}
