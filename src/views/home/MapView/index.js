@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { makeStyles } from '@material-ui/core';
 import Page from 'src/components/Page';
-import Map from 'src/views/home/MapView/Map1';
+import Map from 'src/views/home/MapView/Map';
 
 const useStyles = makeStyles(theme => ({
   root: {
