@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import L from 'leaflet';
+import 'leaflet-editable';
 // postCSS import of Leaflet's CSS
 import 'leaflet/dist/leaflet.css';
 // using webpack json loader we can import our geojson file like this
@@ -7,6 +8,7 @@ import geojson from 'src/data/bk_subway_entrances.json';
 import lotes from 'src/data/Fields.json';
 //Import asistentes
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
+import MeasureTool from 'src/components/GisTools/MeasureTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -22,7 +24,8 @@ config.params = {
   scrollwheel: false,
   legends: true,
   infoControl: false,
-  attributionControl: true
+  attributionControl: true,
+  editable: true
 };
 config.tileLayer = {
   uri: 'http://www.google.com/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}',
@@ -190,6 +193,7 @@ class Map extends Component {
       <div id="mapUI">
         <MapProvider value={this.state.map}>
           <ButtonActionAmbientes />
+          <MeasureTool />
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}
