@@ -12,7 +12,7 @@ import lotes from 'src/data/Fields.json';
 //Import asistentes
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
-import EditTool from 'src/components/GisTools/EditTool';
+import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -175,8 +175,8 @@ class Map extends Component {
     if (this.state.map) return;
     // this function creates the Leaflet map object and is called after the Map component mounts
     let map = L.map(id, config.params);
-    L.control.zoom({ position: 'bottomleft' }).addTo(map);
-    L.control.scale({ position: 'bottomleft' }).addTo(map);
+    //L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    //L.control.scale({ position: 'bottomleft' }).addTo(map);
 
     // a TileLayer is used as the "basemap"
     const tileLayer = L.tileLayer(
@@ -199,7 +199,7 @@ class Map extends Component {
         <MapProvider value={this.state.map}>
           <ButtonActionAmbientes />
           <MeasureTool />
-          <EditTool />
+          <CoordinatesTool />
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}
