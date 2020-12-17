@@ -51,7 +51,8 @@ const themesOptions = [
         paper: colors.common.white
       },
       primary: {
-        main: colors.green[900]
+        main: '#245829',
+        light: '#c0d0b7'
       },
       secondary: {
         main: '#ffb710'

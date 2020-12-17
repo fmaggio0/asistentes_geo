@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import L from 'leaflet';
 import 'leaflet-editable';
+//Leaflet measure path
+import 'leaflet-measure-path/leaflet-measure-path';
+import 'leaflet-measure-path/leaflet-measure-path.css';
 // postCSS import of Leaflet's CSS
 import 'leaflet/dist/leaflet.css';
 // using webpack json loader we can import our geojson file like this
@@ -9,6 +12,7 @@ import lotes from 'src/data/Fields.json';
 //Import asistentes
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
+import EditTool from 'src/components/GisTools/EditTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -182,6 +186,7 @@ class Map extends Component {
 
     map.selectedLayer = null;
     map.baseLayer = null;
+    map.measureTool = L.layerGroup().addTo(map);
 
     // set our state to include the tile layer
     this.setState({ map, tileLayer });
@@ -194,6 +199,7 @@ class Map extends Component {
         <MapProvider value={this.state.map}>
           <ButtonActionAmbientes />
           <MeasureTool />
+          <EditTool />
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}

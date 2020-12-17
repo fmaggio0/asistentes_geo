@@ -1,101 +1,45 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { makeStyles } from '@material-ui/core';
-import IconButton from '@material-ui/core/IconButton';
+import Button from '@material-ui/core/Button';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle, faFilter } from '@fortawesome/free-solid-svg-icons';
-import L from 'leaflet';
+import {
+  faRulerVertical,
+  faRulerCombined,
+  faTimes,
+  faRuler
+} from '@fortawesome/free-solid-svg-icons';
 import MapContext from 'src/contexts/MapContext';
-import 'leaflet-editable';
 
-const useStyles = makeStyles(() => ({
-  root: {},
-  controls: {
+const useStyles = makeStyles(theme => ({
+  buttonGroup: {
     position: 'absolute',
     zIndex: 800,
-    top: '10px',
-    backgroundColor: 'white',
-    left: '10px',
-    borderRadius: '4px',
-    width: '44px',
-    height: '44px',
-    border: '2px solid rgba(0,0,0,0.2)',
-    backgroundClip: 'padding-box',
-    '&:hover': {
-      backgroundColor: '#f4f4f4'
+    bottom: '20px',
+    right: '10px'
+  },
+  button: {
+    width: 35,
+    height: 35,
+    padding: 0,
+    '&:disabled': {
+      backgroundColor: theme.palette.primary.light,
+      color: theme.palette.primary.main,
+      borderRight: 'inherit !important'
     }
   }
 }));
 
 const MeasureTool = props => {
   const classes = useStyles();
+  const [toggleGroup, setToggleGroup] = useState(false);
   const map = useContext(MapContext);
 
-  useEffect(() => {
-    /*L.MeasureTool = L.Handler.extend({
-      addHooks: function() {
-        this.groupbottons = L.DomUtil.get('measure_tools');
-        this.initbutton = L.DomUtil.get('action_measure_tool');
-        this.linebutton = L.DomUtil.get('measurebyline');
-        this.polygonbutton = L.DomUtil.get('measurebypolygon');
-        this.cancelbutton = L.DomUtil.get('measurecancel');
-
-        L.DomUtil.addClass(this.groupbottons, 'd-inline-flex');
-        L.DomUtil.addClass(this.initbutton, 'd-none');
-
-        L.DomEvent.on(this.linebutton, 'click', this.measureByLine, this);
-        L.DomEvent.on(this.polygonbutton, 'click', this.measureByPolygon, this);
-        L.DomEvent.on(this.cancelbutton, 'click', this.removeHooks, this);
-
-        this.measureLayer = L.layerGroup().addTo(map);
-        console.log('hola');
-        map.measureTool = this;
-      },
-      removeHooks: function() {
-        L.DomUtil.removeClass(map.measureTool.groupbottons, 'd-inline-flex');
-        L.DomUtil.removeClass(map.measureTool.initbutton, 'd-none');
-        map.measureTool.measureLayer.remove();
-        map.measureTool.disable();
-      },
-      measureByPolygon: function(event) {
-        let geom = map.editTools
-          .startPolygon()
-          .addTo(map.measureTool.measureLayer)
-          .showMeasurements({ ha: true });
-
-        geom.setStyle({
-          color: '#ff9204'
-        });
-
-        geom.on(
-          'editable:vertex:drag editable:vertex:deleted editable:vertex:new',
-          geom.updateMeasurements
-        );
-      },
-      measureByLine: function(event) {
-        let geom = map.editTools
-          .startPolyline()
-          .addTo(map.measureTool.measureLayer)
-          .showMeasurements({ ha: true });
-
-        geom.setStyle({
-          color: '#ff9204'
-        });
-
-        geom.on(
-          'editable:vertex:drag editable:vertex:deleted editable:vertex:new',
-          geom.updateMeasurements
-        );
-      }
-    });
-
-    // add this to all maps
-    L.Map.addInitHook('addHandler', 'measureTool', L.MeasureTool);*/
-  }, []);
-
   const measureByPolygon = () => {
+    console.log(map);
     let geom = map.editTools
       .startPolygon()
-      .addTo(map)
+      .addTo(map.measureTool)
       .showMeasurements({ ha: true });
 
     geom.setStyle({
@@ -108,18 +52,71 @@ const MeasureTool = props => {
     );
   };
 
+  const measureByLine = () => {
+    let geom = map.editTools
+      .startPolyline()
+      .addTo(map.measureTool)
+      .showMeasurements({ ha: true });
+
+    geom.setStyle({
+      color: '#ff9204'
+    });
+
+    geom.on(
+      'editable:vertex:drag editable:vertex:deleted editable:vertex:new',
+      geom.updateMeasurements
+    );
+  };
+
+  const openToggleGroup = () => {
+    setToggleGroup(true);
+  };
+
+  const closeToggleGroup = () => {
+    map.measureTool.clearLayers();
+    setToggleGroup(false);
+  };
+
   return (
-    <IconButton className={classes.controls} onClick={measureByPolygon}>
-      <FontAwesomeIcon icon={faFilter} />
-    </IconButton>
+    <>
+      <ButtonGroup
+        variant="contained"
+        color="default"
+        className={classes.buttonGroup}
+        aria-label="contained primary button group"
+      >
+        <Button
+          onClick={openToggleGroup}
+          variant="contained"
+          color="default"
+          className={classes.button}
+        >
+          <FontAwesomeIcon icon={faRuler} />
+        </Button>
+      </ButtonGroup>
+      {toggleGroup && (
+        <ButtonGroup
+          variant="contained"
+          color="default"
+          className={classes.buttonGroup}
+          aria-label="contained primary button group"
+        >
+          <Button className={classes.button} disabled>
+            <FontAwesomeIcon icon={faRuler} />
+          </Button>
+          <Button onClick={measureByLine} className={classes.button}>
+            <FontAwesomeIcon icon={faRulerVertical} />
+          </Button>
+          <Button onClick={measureByPolygon} className={classes.button}>
+            <FontAwesomeIcon icon={faRulerCombined} />
+          </Button>
+          <Button onClick={closeToggleGroup} className={classes.button}>
+            <FontAwesomeIcon icon={faTimes} />
+          </Button>
+        </ButtonGroup>
+      )}
+    </>
   );
 };
 
 export default MeasureTool;
-
-/*$(document).on('click', '#action_measure_tool', function() {
-  if (!map.measureTool.enabled()) {
-    //si no esta habilitado
-    map.measureTool.enable(); //habilitar
-  }
-});*/
