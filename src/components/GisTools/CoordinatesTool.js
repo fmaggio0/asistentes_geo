@@ -120,7 +120,7 @@ L.control.coordinatesTool = function(options) {
 import React, { useState, useContext, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
+import Input from '@material-ui/core/Input';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -129,7 +129,10 @@ import {
   faRulerCombined,
   faTimes,
   faRuler,
-  faCrosshairs
+  faCrosshairs,
+  faCopy,
+  faSearch,
+  faShareSquare
 } from '@fortawesome/free-solid-svg-icons';
 import MapContext from 'src/contexts/MapContext';
 import { convertDegToDms, convertDmsToDeg } from 'src/utils/functionsGeo';
@@ -139,12 +142,15 @@ const useStyles = makeStyles(theme => ({
     position: 'absolute',
     zIndex: 800,
     bottom: '20px',
-    left: '10px'
+    left: '10px',
+    backgroundColor: theme.palette.background.paper1
   },
   button: {
     width: 35,
     height: 35,
+    minWidth: 35,
     padding: 0,
+    borderRadius: 0,
     '&:disabled': {
       backgroundColor: theme.palette.primary.light,
       color: theme.palette.primary.main,
@@ -153,7 +159,13 @@ const useStyles = makeStyles(theme => ({
   },
   coordinatesButton: {
     height: 35,
-    fontWeight: 400
+    fontWeight: 400,
+    borderRadius: 0
+  },
+  inputSearch: {
+    marginLeft: 10,
+    marginRight: 10,
+    width: 150
   }
 }));
 
@@ -162,6 +174,7 @@ const CoordinatesTool = props => {
   const [toggleGroup, setToggleGroup] = useState(false);
   const [coordinates, setCoordinates] = useState({});
   const [coordinatesText, setCoordinatesText] = useState({});
+  const [searchCoordinates, setSearchCoordinates] = useState(false);
   const [typeCoordinates, setTypeCoordinates] = useState('lnglat');
   const map = useContext(MapContext);
 
@@ -184,7 +197,7 @@ const CoordinatesTool = props => {
         lat: centerMap.lat.toFixed(5)
       });
 
-      map.on('click', captureClick);
+      //map.on('click', captureClick);
       map.on('mousemove', initCapture);
     }
   }, [map]);
@@ -215,6 +228,8 @@ const CoordinatesTool = props => {
 
   const captureClick = () => {
     console.log('captureClick');
+
+    console.log(coordinatesText); // " Coordenadas copiadas al portapapeles.");
     /*if (map.coordinatesTool.type == 'dms')
       copyToClipboard(
         convertDegToDms(e.latlng.lng, 'long') +
@@ -228,7 +243,10 @@ const CoordinatesTool = props => {
     L.DomUtil.removeClass(map.coordinatesTool.copy, 'active');
     map.off('click', map.coordinatesTool._captureClick);
 
-    alertSuccess(getTextLanguage('coordinates_copiedClipboard')); */ // " Coordenadas copiadas al portapapeles.");
+    alertSuccess(getTextLanguage('coordinates_copiedClipboard')); */ map.off(
+      'click',
+      captureClick
+    );
   };
 
   const initCapture = e => {
@@ -241,6 +259,23 @@ const CoordinatesTool = props => {
   const closeToggleGroup = () => {
     //map.measureTool.clearLayers();
     setToggleGroup(false);
+    setSearchCoordinates(false);
+  };
+
+  const handlerSearch = () => {
+    console.log('search');
+    //map.measureTool.clearLayers();
+    setSearchCoordinates(true);
+  };
+
+  const copyCoordinates = () => {
+    /*console.log('search');
+    //map.measureTool.clearLayers();
+    setSearchCoordinates(true);*/
+    /*L.DomUtil.addClass(map._container, 'crosshair-cursor-enabled');
+    L.DomUtil.addClass(this.copy, 'active');*/
+    map.on('click', captureClick);
+    //console.log(coordinatesText);
   };
 
   /*const addMarker = latlng => {
@@ -362,22 +397,17 @@ const CoordinatesTool = props => {
   };*/
 
   return (
-    <>
-      <ButtonGroup
+    <Box className={classes.buttonGroup}>
+      <Button
+        onClick={openToggleGroup}
         variant="contained"
         color="default"
-        className={classes.buttonGroup}
-        aria-label="contained primary button group"
+        className={classes.button}
+        disabled={toggleGroup}
       >
-        <Button
-          onClick={openToggleGroup}
-          variant="contained"
-          color="default"
-          className={classes.button}
-          disabled={toggleGroup}
-        >
-          <FontAwesomeIcon icon={faCrosshairs} />
-        </Button>
+        <FontAwesomeIcon icon={faCrosshairs} />
+      </Button>
+      {!searchCoordinates && (
         <Button
           onClick={handlerTypeCoordinates}
           variant="contained"
@@ -386,24 +416,60 @@ const CoordinatesTool = props => {
         >
           {coordinatesText.lng}, {coordinatesText.lat}
         </Button>
-        {toggleGroup && (
-          <>
-            <Button className={classes.button} disabled>
-              <FontAwesomeIcon icon={faRuler} />
-            </Button>
-            <Button className={classes.button}>
-              <FontAwesomeIcon icon={faRulerVertical} />
-            </Button>
-            <Button className={classes.button}>
-              <FontAwesomeIcon icon={faRulerCombined} />
-            </Button>
-            <Button onClick={closeToggleGroup} className={classes.button}>
-              <FontAwesomeIcon icon={faTimes} />
-            </Button>
-          </>
-        )}
-      </ButtonGroup>
-    </>
+      )}
+      {searchCoordinates && (
+        <>
+          <Input
+            placeholder={
+              typeCoordinates === 'dms' ? 'Longitud D°M\'S"' : 'Longitud'
+            }
+            className={classes.inputSearch}
+          />
+          <Input
+            placeholder={
+              typeCoordinates === 'dms' ? 'Latitud D°M\'S"' : 'Latitud'
+            }
+            className={classes.inputSearch}
+          />
+          <Button
+            //onClick={closeToggleGroup}
+            className={classes.button}
+            color="default"
+            variant="contained"
+          >
+            <FontAwesomeIcon icon={faShareSquare} />
+          </Button>
+        </>
+      )}
+      {toggleGroup && (
+        <>
+          <Button
+            className={classes.button}
+            color="default"
+            variant="contained"
+            onClick={copyCoordinates}
+          >
+            <FontAwesomeIcon icon={faCopy} />
+          </Button>
+          <Button
+            className={classes.button}
+            onClick={handlerSearch}
+            color="default"
+            variant="contained"
+          >
+            <FontAwesomeIcon icon={faSearch} />
+          </Button>
+          <Button
+            onClick={closeToggleGroup}
+            className={classes.button}
+            color="default"
+            variant="contained"
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </Button>
+        </>
+      )}
+    </Box>
   );
 };
 

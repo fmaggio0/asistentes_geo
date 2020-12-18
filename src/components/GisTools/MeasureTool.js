@@ -79,12 +79,7 @@ const MeasureTool = props => {
 
   return (
     <>
-      <ButtonGroup
-        variant="contained"
-        color="default"
-        className={classes.buttonGroup}
-        aria-label="contained primary button group"
-      >
+      <ButtonGroup className={classes.buttonGroup}>
         <Button
           onClick={openToggleGroup}
           variant="contained"

@@ -48,7 +48,8 @@ const themesOptions = [
       background: {
         default: colors.common.white,
         dark: '#f4f6f8',
-        paper: colors.common.white
+        paper: colors.common.white,
+        paper1: '#e0e0e0'
       },
       primary: {
         main: '#245829',
