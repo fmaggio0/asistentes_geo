@@ -1,141 +1,24 @@
-/*L.Control.CoordinatesTool = L.Control.extend({
-  onAdd: function(map) {
-    let centerMap = map.getCenter();
-    //panel general
-    this.coordsTool = L.DomUtil.create('div', 'coordsTool');
-    //boton action
-    this.collapsePanelButton = L.DomUtil.create(
-      'div',
-      'button-coords tippyUp',
-      this.coordsTool
-    );
-    L.DomUtil.create('i', 'fas fa-crosshairs', this.collapsePanelButton);
-    //panel collapse
-    this.panelTool = L.DomUtil.create('div', 'panelTool', this.coordsTool);
-    //search coords longlat
-    this.searchCoordsLongLat = L.DomUtil.create(
-      'div',
-      'search-coords-longlat d-none',
-      this.panelTool
-    );
-    this.searchLong = L.DomUtil.create(
-      'input',
-      'search-coords search-long',
-      this.searchCoordsLongLat
-    );
-    this.searchLong.placeholder = getTextLanguage('common_longitude');
-    this.searchLat = L.DomUtil.create(
-      'input',
-      'search-coords search-lat',
-      this.searchCoordsLongLat
-    );
-    this.searchLat.placeholder = getTextLanguage('common_latitude');
-    this.goTo = L.DomUtil.create(
-      'i',
-      'fas fa-share-square mr-1 tippyUp',
-      this.searchCoordsLongLat
-    );
-    //display coords
-    this.coords = L.DomUtil.create('div', 'coords tippyUp', this.panelTool);
-    this.coords.style = 'min-width: 130px';
-    this.long = L.DomUtil.create('p', 'long', this.coords);
-    this.long.innerHTML = centerMap.lng;
-    this.comma = L.DomUtil.create('p', '', this.coords);
-    this.comma.innerHTML = ',&nbsp';
-    this.lat = L.DomUtil.create('p', 'lat', this.coords);
-    this.lat.innerHTML = centerMap.lat;
-    //tools
-    this.tools = L.DomUtil.create('div', 'tools d-none', this.panelTool);
-    this.divider = L.DomUtil.create('div', 'divider', this.tools);
-    this.copy = L.DomUtil.create('i', 'fas fa-copy tippyUp', this.tools);
-    this.search = L.DomUtil.create('i', 'fas fa-search tippyUp', this.tools);
-    this.cancel = L.DomUtil.create('i', 'fas fa-times tippyUp', this.tools);
-
-    //tooltips
-    this.collapsePanelButton.dataset.tippyContent = getTextLanguage(
-      'tools_showHidePanel'
-    );
-    this.cancel.dataset.tippyContent = getTextLanguage('tool_closePanel');
-    this.coords.dataset.tippyContent = getTextLanguage(
-      'coordinates_changeFormat'
-    );
-    this.goTo.dataset.tippyContent = getTextLanguage(
-      'coordinates_goCoordinates'
-    );
-    this.copy.dataset.tippyContent = getTextLanguage(
-      'coordinates_copyCoordinates'
-    );
-    this.search.dataset.tippyContent = getTextLanguage(
-      'coordinates_findCoordinates'
-    );
-
-    L.DomEvent.addListener(
-      this.collapsePanelButton,
-      'click',
-      this._collapsePanel,
-      this
-    )
-      .addListener(this.coords, 'click', this._changeType, this)
-      .addListener(this.copy, 'click', this._copy, this)
-      .addListener(this.search, 'click', this._search, this)
-      .addListener(this.cancel, 'click', this.close, this)
-      .addListener(this.goTo, 'click', this._goTo, this);
-
-    L.DomEvent.disableClickPropagation(this.coordsTool);
-    L.DomEvent.disableScrollPropagation(this.coordsTool);
-
-    this.type = 'longlat';
-    this.collapse = false;
-    this.searchMarker;
-
-    map.on('mousemove', this._initCapture);
-    map.coordinatesTool = this;
-
-    return this.coordsTool;
-  },
-  onRemove: function(map) {
-    map.off('mousemove', this._initCapture);
-    delete map.coordinatesTool;
-  },
-  traslate: function(event) {
-    if (this.type == 'longlat') {
-      this.coords.style = 'min-width: 130px';
-      this.searchLong.placeholder = getTextLanguage('common_longitude');
-      this.searchLat.placeholder = getTextLanguage('common_latitude');
-    } else if ((this.type = 'dms')) {
-      this.coords.style = 'min-width: 190px';
-      this.searchLong.placeholder =
-        getTextLanguage('common_longitude') + ' D°M\'S"';
-      this.searchLat.placeholder =
-        getTextLanguage('common_latitude') + ' D°M\'S"';
-    }
-  }
-});
-
-L.control.coordinatesTool = function(options) {
-  return new L.Control.CoordinatesTool(options);
-};
-*/
-
 import React, { useState, useContext, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 import Box from '@material-ui/core/Box';
-import Typography from '@material-ui/core/Typography';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faRulerVertical,
-  faRulerCombined,
   faTimes,
-  faRuler,
   faCrosshairs,
   faCopy,
   faSearch,
   faShareSquare
 } from '@fortawesome/free-solid-svg-icons';
 import MapContext from 'src/contexts/MapContext';
-import { convertDegToDms, convertDmsToDeg } from 'src/utils/functionsGeo';
+import {
+  convertDegToDms,
+  convertDmsToDeg,
+  checkFormatDms,
+  checkFormatLongLat
+} from 'src/utils/functionsGeo';
+import L from 'leaflet';
 
 const useStyles = makeStyles(theme => ({
   buttonGroup: {
@@ -175,20 +58,14 @@ const CoordinatesTool = props => {
   const [coordinates, setCoordinates] = useState({});
   const [coordinatesText, setCoordinatesText] = useState({});
   const [searchCoordinates, setSearchCoordinates] = useState(false);
+  const [searchCoordinatesActive, setSearchCoordinatesActive] = useState(false);
   const [typeCoordinates, setTypeCoordinates] = useState('lnglat');
+  const [searchLat, setSearchLat] = useState('');
+  const [searchLng, setSearchLng] = useState('');
+  const [searchMarker, setSearchMarker] = useState('');
   const map = useContext(MapContext);
 
   useEffect(() => {
-    /*if (map.coordinatesTool.type == 'dms') {
-      map.coordinatesTool.long.innerHTML = convertDegToDms(
-        e.latlng.lng,
-        'long'
-      );
-      map.coordinatesTool.lat.innerHTML = convertDegToDms(e.latlng.lat, 'lat');
-    } else {
-      map.coordinatesTool.long.innerHTML = e.latlng.lng.toFixed(5);
-      map.coordinatesTool.lat.innerHTML = e.latlng.lat.toFixed(5);
-    }*/
     if (map) {
       let centerMap = map.getCenter();
 
@@ -197,7 +74,6 @@ const CoordinatesTool = props => {
         lat: centerMap.lat.toFixed(5)
       });
 
-      //map.on('click', captureClick);
       map.on('mousemove', initCapture);
     }
   }, [map]);
@@ -226,27 +102,17 @@ const CoordinatesTool = props => {
     else setTypeCoordinates('lnglat');
   };
 
-  const captureClick = () => {
-    console.log('captureClick');
-
-    console.log(coordinatesText); // " Coordenadas copiadas al portapapeles.");
-    /*if (map.coordinatesTool.type == 'dms')
-      copyToClipboard(
+  const captureClick = e => {
+    if (typeCoordinates === 'dms')
+      console.log(
         convertDegToDms(e.latlng.lng, 'long') +
           ',' +
           convertDegToDms(e.latlng.lat, 'lat')
       );
-    else
-      copyToClipboard(e.latlng.lng.toFixed(5) + ',' + e.latlng.lat.toFixed(5));
-
+    else console.log(e.latlng.lng.toFixed(5) + ',' + e.latlng.lat.toFixed(5));
     L.DomUtil.removeClass(map._container, 'crosshair-cursor-enabled');
-    L.DomUtil.removeClass(map.coordinatesTool.copy, 'active');
-    map.off('click', map.coordinatesTool._captureClick);
-
-    alertSuccess(getTextLanguage('coordinates_copiedClipboard')); */ map.off(
-      'click',
-      captureClick
-    );
+    setSearchCoordinatesActive(false);
+    map.off('click', captureClick);
   };
 
   const initCapture = e => {
@@ -257,151 +123,63 @@ const CoordinatesTool = props => {
   };
 
   const closeToggleGroup = () => {
-    //map.measureTool.clearLayers();
     setToggleGroup(false);
     setSearchCoordinates(false);
+    if (searchMarker) searchMarker.remove();
   };
 
   const handlerSearch = () => {
-    console.log('search');
-    //map.measureTool.clearLayers();
-    setSearchCoordinates(true);
+    setSearchCoordinates(!searchCoordinates);
   };
 
   const copyCoordinates = () => {
-    /*console.log('search');
-    //map.measureTool.clearLayers();
-    setSearchCoordinates(true);*/
-    /*L.DomUtil.addClass(map._container, 'crosshair-cursor-enabled');
-    L.DomUtil.addClass(this.copy, 'active');*/
+    L.DomUtil.addClass(map._container, 'crosshair-cursor-enabled');
+    setSearchCoordinatesActive(true);
     map.on('click', captureClick);
-    //console.log(coordinatesText);
   };
 
-  /*const addMarker = latlng => {
-    if (this.searchMarker) this.searchMarker.remove();
+  const goToCoordinates = e => {
+    let latlng = null;
+    let lat = null;
+    let lng = null;
 
-    this.searchMarker = L.marker(latlng).addTo(map);
-    map.setView(this.searchMarker._latlng, 15);
-  };
-
-  const goTo = () => {
-    if (this.type == 'dms')
-      var latlng = checkFormatDms(this.searchLong.value, this.searchLat.value);
-    else
-      var latlng = checkFormatLongLat(
-        this.searchLong.value,
-        this.searchLat.value
-      );
-
-    let lat = this.type == 'dms' ? convertDmsToDeg(latlng[0]) : latlng[0];
-    let lng = this.type == 'dms' ? convertDmsToDeg(latlng[1]) : latlng[1];
+    if (typeCoordinates === 'dms') {
+      latlng = checkFormatDms(searchLng, searchLat);
+      lat = convertDmsToDeg(latlng[0]);
+      lng = convertDmsToDeg(latlng[1]);
+    } else {
+      latlng = checkFormatLongLat(searchLng, searchLat);
+      lat = latlng[0];
+      lng = latlng[1];
+    }
 
     if (latlng === false) {
-      alertDanger('Formato de coordenadas invalido.');
+      console.log('Formato de coordenadas invalido.');
       return;
     }
 
-    this.addMarker([lat, lng]);
+    addMarker([lat, lng]);
   };
 
-  const openToggleGroup = () => {
-    setToggleGroup(true);
+  const addMarker = latlng => {
+    let markerParams = {
+      radius: 4,
+      fillColor: '#245829',
+      color: '#fff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 1
+    };
+    if (searchMarker) searchMarker.remove();
+    setSearchMarker(L.circleMarker(latlng, markerParams).addTo(map));
+    map.setView(latlng, 15);
   };
-
-  const search = () => {
-    this.searchLong.value = '';
-    this.searchLat.value = '';
-    L.DomUtil.removeClass(this.searchCoordsLongLat, 'd-none');
-    L.DomUtil.addClass(this.coords, 'd-none');
-  };
-
-  const close = () => {
-    L.DomUtil.addClass(this.searchCoordsLongLat, 'd-none');
-    L.DomUtil.addClass(this.tools, 'd-none');
-    L.DomUtil.removeClass(this.collapsePanelButton, 'group-menu');
-    L.DomUtil.removeClass(this.coords, 'd-none');
-    L.DomUtil.removeClass(this.copy, 'active');
-    L.DomUtil.removeClass(map._container, 'crosshair-cursor-enabled');
-    this.collapse = false;
-    if (this.searchMarker) this.searchMarker.remove();
-  };
-
-  const copy = () => {
-    L.DomUtil.addClass(map._container, 'crosshair-cursor-enabled');
-    L.DomUtil.addClass(this.copy, 'active');
-    map.on('click', this._captureClick);
-  };
-
-  const closeToggleGroup = () => {
-    map.measureTool.clearLayers();
-    setToggleGroup(false);
-  };
-
-  const changeType = () => {
-    if (this.type == 'longlat') {
-      this.type = 'dms';
-      this.coords.style = 'min-width: 190px';
-      this.searchLong.placeholder =
-        getTextLanguage('common_longitude') + ' D°M\'S"';
-      this.searchLat.placeholder =
-        getTextLanguage('common_latitude') + ' D°M\'S"';
-      return;
-    }
-    this.type = 'longlat';
-    this.coords.style = 'min-width: 130px';
-    this.searchLong.placeholder = getTextLanguage('common_longitude');
-    this.searchLat.placeholder = getTextLanguage('common_latitude');
-  };
-
-  const collapsePanel = () => {
-    if (this.collapse == true) {
-      this.close();
-      return;
-    }
-    this.collapse = true;
-    L.DomUtil.removeClass(this.tools, 'd-none');
-    L.DomUtil.addClass(this.collapsePanelButton, 'group-menu');
-  };
-
-  const initCapture = () => {
-    if (map.coordinatesTool.type == 'dms') {
-      map.coordinatesTool.long.innerHTML = convertDegToDms(
-        e.latlng.lng,
-        'long'
-      );
-      map.coordinatesTool.lat.innerHTML = convertDegToDms(e.latlng.lat, 'lat');
-    } else {
-      map.coordinatesTool.long.innerHTML = e.latlng.lng.toFixed(5);
-      map.coordinatesTool.lat.innerHTML = e.latlng.lat.toFixed(5);
-    }
-
-    tippy('.tippyUp', { delay: [500, 0], placement: 'top' });
-  };
-
-  const captureClick = () => {
-    if (map.coordinatesTool.type == 'dms')
-      copyToClipboard(
-        convertDegToDms(e.latlng.lng, 'long') +
-          ',' +
-          convertDegToDms(e.latlng.lat, 'lat')
-      );
-    else
-      copyToClipboard(e.latlng.lng.toFixed(5) + ',' + e.latlng.lat.toFixed(5));
-
-    L.DomUtil.removeClass(map._container, 'crosshair-cursor-enabled');
-    L.DomUtil.removeClass(map.coordinatesTool.copy, 'active');
-    map.off('click', map.coordinatesTool._captureClick);
-
-    alertSuccess(getTextLanguage('coordinates_copiedClipboard')); // " Coordenadas copiadas al portapapeles.");
-  };*/
 
   return (
     <Box className={classes.buttonGroup}>
       <Button
         onClick={openToggleGroup}
         variant="contained"
-        color="default"
         className={classes.button}
         disabled={toggleGroup}
       >
@@ -411,7 +189,6 @@ const CoordinatesTool = props => {
         <Button
           onClick={handlerTypeCoordinates}
           variant="contained"
-          color="default"
           className={classes.coordinatesButton}
         >
           {coordinatesText.lng}, {coordinatesText.lat}
@@ -424,18 +201,22 @@ const CoordinatesTool = props => {
               typeCoordinates === 'dms' ? 'Longitud D°M\'S"' : 'Longitud'
             }
             className={classes.inputSearch}
+            value={searchLng}
+            onChange={e => setSearchLng(e.target.value)}
           />
           <Input
             placeholder={
               typeCoordinates === 'dms' ? 'Latitud D°M\'S"' : 'Latitud'
             }
             className={classes.inputSearch}
+            value={searchLat}
+            onChange={e => setSearchLat(e.target.value)}
           />
           <Button
             //onClick={closeToggleGroup}
             className={classes.button}
-            color="default"
             variant="contained"
+            onClick={goToCoordinates}
           >
             <FontAwesomeIcon icon={faShareSquare} />
           </Button>
@@ -445,16 +226,17 @@ const CoordinatesTool = props => {
         <>
           <Button
             className={classes.button}
-            color="default"
+            color={searchCoordinatesActive ? 'primary' : 'default'}
             variant="contained"
             onClick={copyCoordinates}
+            style={{ borderLeft: '2px solid #000' }}
           >
             <FontAwesomeIcon icon={faCopy} />
           </Button>
           <Button
             className={classes.button}
             onClick={handlerSearch}
-            color="default"
+            color={searchCoordinates ? 'primary' : 'default'}
             variant="contained"
           >
             <FontAwesomeIcon icon={faSearch} />
@@ -462,7 +244,6 @@ const CoordinatesTool = props => {
           <Button
             onClick={closeToggleGroup}
             className={classes.button}
-            color="default"
             variant="contained"
           >
             <FontAwesomeIcon icon={faTimes} />

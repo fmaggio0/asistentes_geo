@@ -36,7 +36,6 @@ const MeasureTool = props => {
   const map = useContext(MapContext);
 
   const measureByPolygon = () => {
-    console.log(map);
     let geom = map.editTools
       .startPolygon()
       .addTo(map.measureTool)
