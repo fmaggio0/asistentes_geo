@@ -13,6 +13,7 @@ import lotes from 'src/data/Fields.json';
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
+import EditTool from 'src/components/GisTools/EditTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -200,6 +201,7 @@ class Map extends Component {
           <ButtonActionAmbientes />
           <MeasureTool />
           <CoordinatesTool />
+          <EditTool />
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}

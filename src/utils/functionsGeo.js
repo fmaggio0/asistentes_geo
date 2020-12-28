@@ -1,3 +1,5 @@
+import * as turf from '@turf/turf';
+
 export function convertDegToDms(dd, longOrLat) {
   let hemisphere = /^[WE]|(?:lon)/i.test(longOrLat)
     ? dd < 0
@@ -63,4 +65,96 @@ export function checkFormatLongLat(lng, lat) {
   if (!regLng.exec(lngClear) || !regLat.exec(latClear)) return false;
 
   return [latClear, lngClear];
+}
+
+export function geometryCheck(geom) {
+  try {
+    geom = turf.rewind(geom);
+    geom = turf.simplify(geom, { tolerance: 0.000001, highQuality: false });
+    geom = turf.cleanCoords(geom);
+
+    if (turf.kinks(geom).features.length > 0) {
+      //si tiene nudos
+      let unkink = turf.unkinkPolygon(geom);
+      let array = [];
+      turf.flattenEach(unkink, function(
+        currentFeature,
+        featureIndex,
+        multiFeatureIndex
+      ) {
+        array.push(currentFeature.geometry.coordinates);
+      });
+      geom = turf.multiPolygon(array);
+    }
+
+    if (geom.geometry.type == 'MultiPolygon') {
+      //limpiar geometrias con menos de 100mts2 (ej: lineas entre lotes)
+      geom = cleanGeometries(geom, 100);
+    }
+
+    if (
+      geom.geometry.type != 'MultiPolygon' &&
+      geom.geometry.type != 'Polygon'
+    ) {
+      throw 'No es poligono ni multipoligono.';
+    }
+
+    if (!turf.buffer(geom, 0)) throw 'La geometria no es valida.';
+
+    if (turf.area(geom) < 100)
+      throw 'La geometria debe tener como minimo 100mts2.';
+
+    return geom;
+  } catch (e) {
+    console.log(e);
+    throw 'Error.';
+  }
+}
+
+export function cleanGeometries(geom, mts) {
+  var array = [];
+  turf.flattenEach(geom, function(
+    currentFeature,
+    featureIndex,
+    multiFeatureIndex
+  ) {
+    var area = turf.area(currentFeature);
+    if (area >= mts) {
+      array.push(currentFeature.geometry.coordinates);
+    }
+  });
+  return turf.multiPolygon(array);
+}
+
+export function unionAll(drawGeom, defaultGeom) {
+  let union = turf.union(drawGeom, defaultGeom);
+  return union;
+}
+
+export function cutAll(drawGeom, defaultGeom) {
+  var count = 0;
+  var cantgeom = 0;
+  turf.flattenEach(defaultGeom, function(currentFeature) {
+    cantgeom++;
+    if (drawGeom.geometry.type == 'MultiPolygon') {
+      turf.flattenEach(drawGeom, function(currentFeatureDraw) {
+        if (turf.booleanContains(currentFeatureDraw, currentFeature)) {
+          count++;
+        }
+      });
+    } else {
+      if (turf.booleanContains(drawGeom, currentFeature)) {
+        count++;
+      }
+    }
+  });
+
+  /*if (count == cantgeom) {
+    //eliminar todo
+    map.editTools.featuresLayer.clearLayers();
+    return;
+  }*/
+
+  let cut = turf.difference(defaultGeom, drawGeom);
+  return cut;
 }
