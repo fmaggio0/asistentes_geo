@@ -58,7 +58,8 @@ class Map extends Component {
       geojsonLayer: null,
       geojson: null,
       numEntrances: null,
-      selected: null
+      selected: null,
+      editSelected: false
     };
     this._mapNode = null;
     this.onEachFeature = this.onEachFeature.bind(this);
@@ -165,6 +166,7 @@ class Map extends Component {
     this.state.map.fitBounds(layer.getBounds());
     this.setState(state => (state.map.selectedLayer = layer));
     this.setState(state => (state.selected = layer));
+    this.setState(state => (state.editSelected = true));
     if (previous) {
       this.dehighlight(previous);
     }
@@ -197,11 +199,14 @@ class Map extends Component {
     const { classes } = this.props;
     return (
       <div id="mapUI">
-        <MapProvider value={this.state.map}>
+        <MapProvider value={this}>
           <ButtonActionAmbientes />
           <MeasureTool />
           <CoordinatesTool />
-          <EditTool />
+
+          {this.state.editSelected && (
+            <EditTool editLayer={this.state.selected} />
+          )}
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}

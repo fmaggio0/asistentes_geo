@@ -27,19 +27,19 @@ const useStyles = makeStyles(theme360 => ({
 export default props => {
   const classes = useStyles();
   const [selectLayerName, setSelectLayerName] = useState('' || props.lote);
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
 
   useEffect(() => {
     //Mejorar...
-    if (map) {
-      map.on('click', function(e) {
+    if (mapContext.state.map) {
+      mapContext.state.map.on('click', function(e) {
         if (e.target.selectedLayer) {
           setSelectLayerName(e.target.selectedLayer.feature.properties.Field);
           props.onChangeLote(e.target.selectedLayer.feature.properties.Field);
         }
       });
     }
-  }, [map]);
+  }, [mapContext.state.map]);
 
   return (
     <div>

@@ -21,12 +21,12 @@ export default props => {
   const classes = useStyles();
   const [ambiente, setAmbiente] = useState([]);
   const { ambientes } = props;
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
 
   const handleChange = event => {
     setAmbiente(event.target.value);
 
-    map.baseLayer.on('click', function(e) {
+    mapContext.state.map.baseLayer.on('click', function(e) {
       console.log(e.layer.setStyle());
       e.layer.setStyle({
         fillColor: event.target.value.color,

@@ -102,7 +102,7 @@ export default props => {
   const [rows, setRows] = useState(data);
   const { ambientes } = props;
   const [featureGroupAmbientes, setFeatureGroupAmbientes] = useState([]);
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
 
   const handleChange = row => event => {
     let selected = event.target.value;
@@ -119,7 +119,7 @@ export default props => {
 
     let setAmbientesLayers = [];
 
-    map.baseLayer.eachLayer(function(layer) {
+    mapContext.state.map.baseLayer.eachLayer(function(layer) {
       if (layer.feature.properties.Class === row.class) {
         let foundIndex = featureGroupAmbientes.findIndex(
           x => x.id === layer._leaflet_id

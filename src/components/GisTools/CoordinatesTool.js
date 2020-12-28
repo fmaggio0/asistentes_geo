@@ -63,20 +63,20 @@ const CoordinatesTool = props => {
   const [searchLat, setSearchLat] = useState('');
   const [searchLng, setSearchLng] = useState('');
   const [searchMarker, setSearchMarker] = useState('');
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
 
   useEffect(() => {
-    if (map) {
-      let centerMap = map.getCenter();
+    if (mapContext.state.map) {
+      let centerMap = mapContext.state.map.getCenter();
 
       setCoordinates({
         lng: centerMap.lng.toFixed(5),
         lat: centerMap.lat.toFixed(5)
       });
 
-      map.on('mousemove', initCapture);
+      mapContext.state.map.on('mousemove', initCapture);
     }
-  }, [map]);
+  }, [mapContext.state.map]);
 
   useEffect(() => {
     if (typeCoordinates === 'dms') {
@@ -110,9 +110,12 @@ const CoordinatesTool = props => {
           convertDegToDms(e.latlng.lat, 'lat')
       );
     else console.log(e.latlng.lng.toFixed(5) + ',' + e.latlng.lat.toFixed(5));
-    L.DomUtil.removeClass(map._container, 'crosshair-cursor-enabled');
+    L.DomUtil.removeClass(
+      mapContext.state.map._container,
+      'crosshair-cursor-enabled'
+    );
     setSearchCoordinatesActive(false);
-    map.off('click', captureClick);
+    mapContext.state.map.off('click', captureClick);
   };
 
   const initCapture = e => {
@@ -133,9 +136,12 @@ const CoordinatesTool = props => {
   };
 
   const copyCoordinates = () => {
-    L.DomUtil.addClass(map._container, 'crosshair-cursor-enabled');
+    L.DomUtil.addClass(
+      mapContext.state.map._container,
+      'crosshair-cursor-enabled'
+    );
     setSearchCoordinatesActive(true);
-    map.on('click', captureClick);
+    mapContext.state.map.on('click', captureClick);
   };
 
   const goToCoordinates = e => {
@@ -171,8 +177,10 @@ const CoordinatesTool = props => {
       fillOpacity: 1
     };
     if (searchMarker) searchMarker.remove();
-    setSearchMarker(L.circleMarker(latlng, markerParams).addTo(map));
-    map.setView(latlng, 15);
+    setSearchMarker(
+      L.circleMarker(latlng, markerParams).addTo(mapContext.state.map)
+    );
+    mapContext.state.map.setView(latlng, 15);
   };
 
   return (

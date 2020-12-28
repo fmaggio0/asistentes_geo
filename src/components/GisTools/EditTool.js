@@ -49,7 +49,8 @@ const EditTool = props => {
   const classes = useStyles();
   const [toggleGroup, setToggleGroup] = useState(false);
   const [geomtryHistory, setGeomtryHistory] = useState([]);
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
+  const { editLayer } = props;
 
   const openToggleGroup = () => {
     setToggleGroup(true);
@@ -60,13 +61,14 @@ const EditTool = props => {
   };
 
   const drawPolygon = () => {
-    let geom = map.editTools.startPolygon();
+    let geom = mapContext.state.map.editTools.startPolygon();
 
     geom.on('editable:drawing:end', function(end) {
       if (end.layer._map) {
         try {
-          let editLayers = map.editTools.featuresLayer.toGeoJSON();
-          let defaultGeom = editLayers.features[0];
+          //let editLayers = mapContext.state.map.editTools.featuresLayer.toGeoJSON();
+          //console.log(editLayer.toGeoJSON());
+          let defaultGeom = editLayer.toGeoJSON();
           let drawGeom = end.layer.toGeoJSON();
 
           /*if (
@@ -110,7 +112,7 @@ const EditTool = props => {
   };
 
   const checkForIntersections = drawGeom => {
-    var difference = drawGeom;
+    /*var difference = drawGeom;
 
     let iLayerEditId = -1;
     let layerLeafletEdit = undefined;
@@ -132,15 +134,17 @@ const EditTool = props => {
         }
       });
     }
-    return difference;
+    return difference;*/
   };
 
   const setLayer = (geoj, context) => {
     setGeomtryHistory(oldArray => [...oldArray, geoj]);
-    map.editTools.featuresLayer.clearLayers();
-    let lay = L.GeoJSON.geometryToLayer(geoj);
-    map.editTools.featuresLayer.addLayer(lay);
-    lay.enableEdit();
+    mapContext.state.map.editTools.featuresLayer.clearLayers();
+    console.log(geoj);
+    mapContext.select(L.GeoJSON.geometryToLayer(geoj));
+    //let lay = L.GeoJSON.geometryToLayer(geoj);
+    //mapContext.state.map.editTools.featuresLayer.addLayer(lay);
+    //lay.enableEdit();
     //L.control.setEvents(lay, context);
   };
 

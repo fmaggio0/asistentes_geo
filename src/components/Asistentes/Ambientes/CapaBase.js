@@ -30,7 +30,7 @@ const baseLayers = [
 export default props => {
   const [baseLayer, setBaseLayer] = useState([]);
   const [selectedBaseLayer, setSelectedBaseLayer] = useState([]);
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
   const { capabase } = props;
 
   const handleChange = event => {
@@ -53,12 +53,12 @@ export default props => {
 
   useEffect(() => {
     //Axios api call para traer geometrias de la capa base
-    if (selectedBaseLayer > 0 && map.baseLayer === null) {
+    if (selectedBaseLayer > 0 && mapContext.state.map.baseLayer === null) {
       var capabase = new L.GeoJSON(dataCapaBase, {
         onEachFeature: onEachFeature
       });
-      capabase.addTo(map);
-      map.baseLayer = capabase;
+      capabase.addTo(mapContext.state.map);
+      mapContext.state.map.baseLayer = capabase;
     }
     // eslint-disable-next-line
   }, [selectedBaseLayer]);

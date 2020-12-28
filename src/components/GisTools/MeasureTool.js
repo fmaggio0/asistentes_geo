@@ -33,12 +33,12 @@ const useStyles = makeStyles(theme => ({
 const MeasureTool = props => {
   const classes = useStyles();
   const [toggleGroup, setToggleGroup] = useState(false);
-  const map = useContext(MapContext);
+  const mapContext = useContext(MapContext);
 
   const measureByPolygon = () => {
-    let geom = map.editTools
+    let geom = mapContext.state.map.editTools
       .startPolygon()
-      .addTo(map.measureTool)
+      .addTo(mapContext.state.map.measureTool)
       .showMeasurements({ ha: true });
 
     geom.setStyle({
@@ -52,9 +52,9 @@ const MeasureTool = props => {
   };
 
   const measureByLine = () => {
-    let geom = map.editTools
+    let geom = mapContext.state.map.editTools
       .startPolyline()
-      .addTo(map.measureTool)
+      .addTo(mapContext.state.map.measureTool)
       .showMeasurements({ ha: true });
 
     geom.setStyle({
@@ -72,7 +72,7 @@ const MeasureTool = props => {
   };
 
   const closeToggleGroup = () => {
-    map.measureTool.clearLayers();
+    mapContext.state.map.measureTool.clearLayers();
     setToggleGroup(false);
   };
 
