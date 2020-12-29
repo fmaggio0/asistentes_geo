@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
@@ -52,6 +52,11 @@ const EditTool = props => {
   const mapContext = useContext(MapContext);
   const { editLayer } = props;
 
+  useEffect(() => {
+    //editLayer.toGeoJSON();
+    setLayer(editLayer.toGeoJSON() /*, context*/);
+  }, []);
+
   const openToggleGroup = () => {
     setToggleGroup(true);
   };
@@ -66,9 +71,7 @@ const EditTool = props => {
     geom.on('editable:drawing:end', function(end) {
       if (end.layer._map) {
         try {
-          //let editLayers = mapContext.state.map.editTools.featuresLayer.toGeoJSON();
-          //console.log(editLayer.toGeoJSON());
-          let defaultGeom = editLayer.toGeoJSON();
+          let defaultGeom = [...geomtryHistory].pop();
           let drawGeom = end.layer.toGeoJSON();
 
           /*if (
@@ -83,10 +86,30 @@ const EditTool = props => {
           drawProcess(drawGeom, defaultGeom);
         } catch (e) {
           console.log(e);
-          //this.undoGeometry();
+          undoGeometry();
         }
       }
     });
+  };
+
+  const undoGeometry = () => {
+    /*if (event == 'button') {
+      if (map.editTools.geomtryHistory.length != 1) {
+        map.editTools.geomtryHistory.splice(-1, 1);
+      }
+    }
+    var lastChange = map.editTools.geomtryHistory.pop();
+    map.editTools.featuresLayer.clearLayers();
+    if (lastChange) {
+      setLayer(lastChange, this);
+    }*/
+    let lastChange = [...geomtryHistory].pop();
+    setGeomtryHistory(oldArray => [...oldArray, oldArray.pop()]);
+
+    mapContext.state.map.editTools.featuresLayer.clearLayers();
+    if (lastChange) {
+      setLayer(lastChange);
+    }
   };
 
   const drawProcess = (drawGeom, defaultGeom) => {
@@ -137,16 +160,20 @@ const EditTool = props => {
     return difference;*/
   };
 
-  const setLayer = (geoj, context) => {
+  const setLayer = (geoj /*, context*/) => {
     setGeomtryHistory(oldArray => [...oldArray, geoj]);
     mapContext.state.map.editTools.featuresLayer.clearLayers();
-    console.log(geoj);
-    mapContext.select(L.GeoJSON.geometryToLayer(geoj));
-    //let lay = L.GeoJSON.geometryToLayer(geoj);
-    //mapContext.state.map.editTools.featuresLayer.addLayer(lay);
-    //lay.enableEdit();
+    //console.log(geoj);
+    //mapContext.setEditLayer(geoj);
+    let lay = L.GeoJSON.geometryToLayer(geoj);
+    mapContext.state.map.editTools.featuresLayer.addLayer(lay);
+    lay.enableEdit();
     //L.control.setEvents(lay, context);
   };
+
+  useEffect(() => {
+    console.log(geomtryHistory);
+  }, [geomtryHistory]);
 
   return (
     <>

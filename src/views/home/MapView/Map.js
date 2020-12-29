@@ -39,6 +39,23 @@ config.tileLayer = {
   }
 };
 
+const styleSelected = {
+  weight: 6,
+  opacity: 1,
+  color: '#000000',
+  fillOpacity: 0.2,
+  dashArray: 0
+};
+
+const styleEmpty = {
+  fillColor: '#BD0026',
+  weight: 1,
+  opacity: 1,
+  color: '#BD0026',
+  fillOpacity: 0,
+  dashArray: 0
+};
+
 const useStyles = theme => ({
   map: {
     position: 'absolute',
@@ -106,9 +123,7 @@ class Map extends Component {
     const geojsonLayer = L.geoJson(geojson, {
       onEachFeature: this.onEachFeature,
       style: function() {
-        return {
-          color: 'red'
-        };
+        return styleEmpty;
       }
     });
     // add our GeoJSON layer to the Leaflet map object
@@ -136,15 +151,12 @@ class Map extends Component {
 
   onEachFeature(feature, layer) {
     layer.on('click', e => {
-      this.select(e.target);
-      this.setState(state => (state.map.selectedLayer = layer));
+      if (this.state.editSelected !== true) this.select(e.target);
     });
   }
 
   highlight(layer) {
-    layer.setStyle({
-      color: 'blue'
-    });
+    layer.setStyle(styleSelected);
   }
 
   dehighlight(layer) {
@@ -152,9 +164,7 @@ class Map extends Component {
       this.state.selected === null ||
       this.state.selected._leaflet_id !== layer._leaflet_id
     ) {
-      layer.setStyle({
-        color: 'red'
-      });
+      layer.setStyle(styleEmpty);
     }
   }
 
@@ -164,7 +174,6 @@ class Map extends Component {
     }
 
     this.state.map.fitBounds(layer.getBounds());
-    this.setState(state => (state.map.selectedLayer = layer));
     this.setState(state => (state.selected = layer));
     this.setState(state => (state.editSelected = true));
     if (previous) {
@@ -174,9 +183,13 @@ class Map extends Component {
     this.highlight(layer);
   }
 
+  setEditLayer(geojson) {
+    console.log(geojson);
+  }
+
   init(id) {
     if (this.state.map) return;
-    // this function creates the Leaflet map object and is called after the Map component mounts
+
     let map = L.map(id, config.params);
     //L.control.zoom({ position: 'bottomleft' }).addTo(map);
     //L.control.scale({ position: 'bottomleft' }).addTo(map);
@@ -187,8 +200,6 @@ class Map extends Component {
       config.tileLayer.params
     ).addTo(map);
 
-    map.selectedLayer = null;
-    map.baseLayer = null;
     map.measureTool = L.layerGroup().addTo(map);
 
     // set our state to include the tile layer
