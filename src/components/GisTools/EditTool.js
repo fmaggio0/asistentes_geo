@@ -48,12 +48,12 @@ const useStyles = makeStyles(theme => ({
 const EditTool = props => {
   const classes = useStyles();
   const [toggleGroup, setToggleGroup] = useState(false);
+  const [toggleCut, setToggleCut] = useState(false);
   const [geomtryHistory, setGeomtryHistory] = useState([]);
   const mapContext = useContext(MapContext);
   const { editLayer } = props;
 
   useEffect(() => {
-    //editLayer.toGeoJSON();
     setLayer(editLayer.toGeoJSON() /*, context*/);
   }, []);
 
@@ -73,7 +73,6 @@ const EditTool = props => {
         try {
           let defaultGeom = [...geomtryHistory].pop();
           let drawGeom = end.layer.toGeoJSON();
-
           /*if (
               this.cutStatus == true &&
               defaultGeom.geometry.type == 'Point'
@@ -86,29 +85,36 @@ const EditTool = props => {
           drawProcess(drawGeom, defaultGeom);
         } catch (e) {
           console.log(e);
-          undoGeometry();
+          errorGeometry();
         }
       }
     });
   };
 
-  const undoGeometry = () => {
-    /*if (event == 'button') {
-      if (map.editTools.geomtryHistory.length != 1) {
-        map.editTools.geomtryHistory.splice(-1, 1);
-      }
-    }
-    var lastChange = map.editTools.geomtryHistory.pop();
-    map.editTools.featuresLayer.clearLayers();
-    if (lastChange) {
-      setLayer(lastChange, this);
-    }*/
+  const errorGeometry = () => {
     let lastChange = [...geomtryHistory].pop();
-    setGeomtryHistory(oldArray => [...oldArray, oldArray.pop()]);
-
-    mapContext.state.map.editTools.featuresLayer.clearLayers();
     if (lastChange) {
-      setLayer(lastChange);
+      setLayer(lastChange, true);
+    }
+  };
+
+  const undoGeometry = e => {
+    //console.log(e.target.value);
+    if (geomtryHistory.length > 1) {
+      setGeomtryHistory(
+        geomtryHistory.filter((_, i) => i !== geomtryHistory.length - 1)
+      );
+
+      //console.log(geomtryHistory);
+      let lastChange = [...geomtryHistory].splice(-2, 1)[0];
+
+      console.log(lastChange);
+
+      mapContext.state.map.editTools.featuresLayer.clearLayers();
+      if (lastChange) {
+        //console.log(lastChange);
+        setLayer(lastChange, true);
+      }
     }
   };
 
@@ -116,15 +122,15 @@ const EditTool = props => {
     let drawGeometryChecked = geometryCheck(drawGeom);
     let process;
 
-    /*if (this.cutStatus == true) {
+    if (toggleCut === true) {
       process = cutAll(drawGeometryChecked, defaultGeom);
       if (!process) {
-        this.cutToggle();
+        setToggleCut(false);
         return;
       }
-    } else {*/
-    process = unionAll(drawGeometryChecked, defaultGeom);
-    //}
+    } else {
+      process = unionAll(drawGeometryChecked, defaultGeom);
+    }
 
     //let geometryWithoutIntersections = checkForIntersections(process);
     let resultGeometryChecked = geometryCheck(
@@ -160,11 +166,9 @@ const EditTool = props => {
     return difference;*/
   };
 
-  const setLayer = (geoj /*, context*/) => {
-    setGeomtryHistory(oldArray => [...oldArray, geoj]);
+  const setLayer = (geoj, error = false) => {
+    if (error === false) setGeomtryHistory(oldArray => [...oldArray, geoj]);
     mapContext.state.map.editTools.featuresLayer.clearLayers();
-    //console.log(geoj);
-    //mapContext.setEditLayer(geoj);
     let lay = L.GeoJSON.geometryToLayer(geoj);
     mapContext.state.map.editTools.featuresLayer.addLayer(lay);
     lay.enableEdit();
@@ -200,10 +204,14 @@ const EditTool = props => {
             style={{ width: 2, backgroundColor: '#263238' }}
           />
         </Box>
-        <Button className={classes.button}>
+        <Button
+          className={classes.button}
+          onClick={() => setToggleCut(!toggleCut)}
+          color={toggleCut ? 'primary' : 'default'}
+        >
           <FontAwesomeIcon icon={faCut} size="lg" />
         </Button>
-        <Button className={classes.button}>
+        <Button className={classes.button} onClick={undoGeometry} value="undo">
           <FontAwesomeIcon icon={faUndo} size="lg" />
         </Button>
         <Button onClick={closeToggleGroup} className={classes.button}>
