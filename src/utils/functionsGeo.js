@@ -158,3 +158,20 @@ export function cutAll(drawGeom, defaultGeom) {
   let cut = turf.difference(defaultGeom, drawGeom);
   return cut;
 }
+
+export function unify(polyList) {
+  var unionTemp = undefined;
+  turf.flattenEach(polyList, function(
+    currentFeature,
+    featureIndex,
+    multiFeatureIndex
+  ) {
+    if (multiFeatureIndex == 0) {
+      unionTemp = currentFeature;
+    } else {
+      unionTemp = turf.union(unionTemp, currentFeature);
+    }
+  });
+
+  return unionTemp;
+}
