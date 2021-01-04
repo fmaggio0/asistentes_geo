@@ -5,11 +5,14 @@ import Box from '@material-ui/core/Box';
 import Divider from '@material-ui/core/Divider';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faEdit,
   faTimes,
   faUndo,
-  faCut
+  faCut,
+  faMousePointer,
+  faScalpelPath,
+  faPlus
 } from '@fortawesome/pro-solid-svg-icons';
+import { faObjectGroup, faTrashAlt } from '@fortawesome/pro-regular-svg-icons';
 import {
   faDrawSquare,
   faDrawCircle,
@@ -20,19 +23,32 @@ import { geometryCheck, cutAll, unionAll, unify } from 'src/utils/functionsGeo';
 import L from 'leaflet';
 import 'leaflet-geometryutil';
 import 'leaflet-snap';
-import { circle, difference } from '@turf/turf';
+import {
+  circle,
+  difference,
+  polygonToLine,
+  union,
+  polygonize,
+  booleanPointInPolygon,
+  pointOnFeature,
+  combine
+} from '@turf/turf';
 import useStateRef from 'react-usestateref';
+import { polygonCut } from '../../utils/functionsGeo';
 
 const useStyles = makeStyles(theme => ({
-  buttonGroup: {
+  editGroup: {
     position: 'absolute',
     zIndex: 800,
     left: '50%',
     top: 10,
-    transform: 'translate(-50%, 0%)',
+    transform: 'translate(-50%, 0%)'
+  },
+  buttongroup: {
     backgroundColor: theme.palette.background.paper1,
     borderRadius: 4,
-    display: 'inline-flex'
+    display: 'inline-flex',
+    marginLeft: 10
   },
   button: {
     width: 35,
@@ -206,6 +222,51 @@ const EditTool = props => {
     setEvents(lay);
   };
 
+  const cutWithLine = e => {
+    var geom = mapContext.state.map.editTools.startPolyline();
+
+    geom.on('editable:drawing:end', function(end) {
+      if (end.layer._map) {
+        try {
+          const poly = editLayer.toGeoJSON();
+          const line = end.layer.toGeoJSON();
+
+          console.log(poly);
+          console.log(line);
+
+          const result = polygonCut(poly.geometry, line.geometry);
+
+          console.log(result);
+
+          /*const polyAsLine = polygonToLine(poly);
+          //console.log(polyAsLine);
+          const unionedLines = union(polyAsLine.features[0], line);
+
+          const polygonized = polygonize(unionedLines);
+          const keepFromPolygonized = polygonized['features'].filter(ea =>
+            booleanPointInPolygon(pointOnFeature(ea), poly)
+          );
+          console.log(keepFromPolygonized);
+          const multipolygon1 = combine(keepFromPolygonized);
+
+          console.log(multipolygon1);*/
+          /*let defaultGeom = [...geomtryHistory].pop();
+          let center = end.layer.toGeoJSON().geometry.coordinates;
+          let radius = end.layer._mRadius;
+          let drawGeom = circle(center, radius, {
+            steps: 30,
+            units: 'meters'
+          });
+          drawProcess(drawGeom, defaultGeom);*/
+          console.log('dividir');
+        } catch (e) {
+          console.log(e);
+          errorGeometry();
+        }
+      }
+    });
+  };
+
   const setEvents = lay => {
     let snapGuideLayer;
 
@@ -314,60 +375,80 @@ const EditTool = props => {
     //$('.leaflet-overlay-pane path').removeClass('leaflet-interactive');
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     console.log(geomtryHistory);
   }, [geomtryHistory]);
 
   useEffect(() => {
     console.log(contextWithoutEditLayer);
-  }, [contextWithoutEditLayer]);
+  }, [contextWithoutEditLayer]);*/
 
   return (
     <>
-      <Box className={classes.buttonGroup}>
-        <Button className={classes.button} disabled>
-          <FontAwesomeIcon icon={faEdit} size="lg" />
-        </Button>
-        <Button
-          className={classes.button}
-          onClick={drawSquare}
-          color={activeSquare ? 'primary' : 'default'}
-        >
-          <FontAwesomeIcon icon={faDrawSquare} size="lg" />
-        </Button>
-        <Button
-          className={classes.button}
-          onClick={drawCircle}
-          color={activeCircle ? 'primary' : 'default'}
-        >
-          <FontAwesomeIcon icon={faDrawCircle} size="lg" />
-        </Button>
-        <Button
-          className={classes.button}
-          onClick={drawPolygon}
-          color={activePolygon ? 'primary' : 'default'}
-        >
-          <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
-        </Button>
-        <Box style={{ paddingTop: 5, paddingBottom: 5 }}>
-          <Divider
-            orientation="vertical"
-            style={{ width: 2, backgroundColor: '#263238' }}
-          />
+      <Box className={classes.editGroup}>
+        <Box className={classes.buttongroup}>
+          <Button
+            className={classes.button}
+            onClick={drawSquare}
+            color={activeSquare ? 'primary' : 'default'}
+          >
+            <FontAwesomeIcon icon={faDrawSquare} size="lg" />
+          </Button>
+          <Button
+            className={classes.button}
+            onClick={drawCircle}
+            color={activeCircle ? 'primary' : 'default'}
+          >
+            <FontAwesomeIcon icon={faDrawCircle} size="lg" />
+          </Button>
+          <Button
+            className={classes.button}
+            onClick={drawPolygon}
+            color={activePolygon ? 'primary' : 'default'}
+          >
+            <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
+          </Button>
+          <Box style={{ paddingTop: 5, paddingBottom: 5 }}>
+            <Divider
+              orientation="vertical"
+              style={{ width: 2, backgroundColor: '#263238' }}
+            />
+          </Box>
+          <Button
+            className={classes.button}
+            onClick={() => setActiveCut(!activeCut)}
+            color={activeCut ? 'primary' : 'default'}
+          >
+            <FontAwesomeIcon icon={faCut} size="lg" />
+          </Button>
         </Box>
-        <Button
-          className={classes.button}
-          onClick={() => setActiveCut(!activeCut)}
-          color={activeCut ? 'primary' : 'default'}
-        >
-          <FontAwesomeIcon icon={faCut} size="lg" />
-        </Button>
-        <Button className={classes.button} onClick={undoGeometry} value="undo">
-          <FontAwesomeIcon icon={faUndo} size="lg" />
-        </Button>
-        <Button className={classes.button} onClick={() => props.unmountMe()}>
-          <FontAwesomeIcon icon={faTimes} size="lg" />
-        </Button>
+
+        <Box className={classes.buttongroup}>
+          <Button className={classes.button}>
+            <FontAwesomeIcon icon={faMousePointer} size="lg" />
+          </Button>
+          <Button className={classes.button} onClick={cutWithLine}>
+            <FontAwesomeIcon icon={faScalpelPath} size="lg" />
+          </Button>
+          <Button className={classes.button}>
+            <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+          </Button>
+          <Button className={classes.button} onClick={undoGeometry}>
+            <FontAwesomeIcon icon={faUndo} size="lg" />
+          </Button>
+        </Box>
+
+        <Box className={classes.buttongroup}>
+          <Button className={classes.button}>
+            <FontAwesomeIcon icon={faTrashAlt} size="lg" />
+          </Button>
+          <Button className={classes.button}>
+            <FontAwesomeIcon icon={faPlus} size="lg" />
+          </Button>
+          <Button className={classes.button} onClick={() => props.unmountMe()}>
+            <FontAwesomeIcon icon={faTimes} size="lg" />
+          </Button>
+        </Box>
       </Box>
     </>
   );
