@@ -5,18 +5,23 @@ import Box from '@material-ui/core/Box';
 import Divider from '@material-ui/core/Divider';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faDrawPolygon,
   faEdit,
   faTimes,
   faUndo,
   faCut
-} from '@fortawesome/free-solid-svg-icons';
+} from '@fortawesome/pro-solid-svg-icons';
+import {
+  faDrawSquare,
+  faDrawCircle,
+  faDrawPolygon
+} from '@fortawesome/pro-light-svg-icons';
 import MapContext from 'src/contexts/MapContext';
 import { geometryCheck, cutAll, unionAll, unify } from 'src/utils/functionsGeo';
 import L from 'leaflet';
 import 'leaflet-geometryutil';
 import 'leaflet-snap';
-import { circle } from '@turf/turf';
+import { circle, difference } from '@turf/turf';
+import useStateRef from 'react-usestateref';
 
 const useStyles = makeStyles(theme => ({
   buttonGroup: {
@@ -55,13 +60,22 @@ const EditTool = props => {
   const [activeCircle, setActiveCircle] = useState(false);
   const [activePolygon, setActivePolygon] = useState(false);
   const [activeCut, setActiveCut] = useState(false);
+  const [
+    contextWithoutEditLayer,
+    SetContextWithoutEditLayer,
+    contextWithoutEditLayerRef
+  ] = useStateRef(null);
   const [geomtryHistory, setGeomtryHistory] = useState([]);
   const mapContext = useContext(MapContext);
   const { editLayer, contextLayer } = props;
 
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
-    console.log(contextLayer);
+    console.log(contextLayer.hasLayer(editLayer));
+    console.log(editLayer);
+    if (contextLayer.hasLayer(editLayer)) {
+      SetContextWithoutEditLayer(contextLayer.removeLayer(editLayer));
+    }
 
     return () => {
       console.log('unmont');
@@ -139,9 +153,8 @@ const EditTool = props => {
 
   const errorGeometry = () => {
     let lastChange = [...geomtryHistory].pop();
-    if (lastChange) {
-      setLayer(lastChange, true);
-    }
+
+    if (lastChange) setLayer(lastChange, true);
   };
 
   const undoGeometry = e => {
@@ -151,9 +164,8 @@ const EditTool = props => {
       );
       let lastChange = [...geomtryHistory].splice(-2, 1)[0];
       mapContext.state.map.editTools.featuresLayer.clearLayers();
-      if (lastChange) {
-        setLayer(lastChange, true);
-      }
+
+      if (lastChange) setLayer(lastChange, true);
     }
   };
 
@@ -171,38 +183,18 @@ const EditTool = props => {
       process = unionAll(drawGeometryChecked, defaultGeom);
     }
 
-    //let geometryWithoutIntersections = checkForIntersections(process);
-    let resultGeometryChecked = geometryCheck(
-      /*geometryWithoutIntersections*/ process
-    );
+    let geometryWithoutIntersections = checkForIntersections(process);
+    let resultGeometryChecked = geometryCheck(geometryWithoutIntersections);
 
     setLayer(resultGeometryChecked);
   };
 
   const checkForIntersections = drawGeom => {
-    /*var difference = drawGeom;
-
-    let iLayerEditId = -1;
-    let layerLeafletEdit = undefined;
-    let objSelected = mapsLayersVector.GetSelectedObject();
-    if (objSelected != null) {
-      layerLeafletEdit = objSelected.layerLeaflet;
-      iLayerEditId = objSelected.objectLeaflet.feature.properties.object_id;
-    } else {
-      let laySelected = mapsLayersVector.GetSelected();
-      if (laySelected != undefined) {
-        layerLeafletEdit = laySelected.layerLeaflet;
-      }
-    }
-    if (layerLeafletEdit != undefined) {
-      layerLeafletEdit.eachLayer(function(layer) {
-        var layerGeo = layer.toGeoJSON();
-        if (layerGeo.properties.object_id != iLayerEditId) {
-          difference = turf.difference(difference, layerGeo);
-        }
-      });
-    }
-    return difference;*/
+    let diff;
+    contextWithoutEditLayerRef.current.eachLayer(function(layer) {
+      diff = difference(drawGeom, layer.toGeoJSON());
+    });
+    return diff;
   };
 
   const setLayer = (geoj, error = false) => {
@@ -242,7 +234,7 @@ const EditTool = props => {
         try {
           let geoj = unify(dragend.layer.toGeoJSON());
           geoj = geometryCheck(geoj);
-          //geoj = checkForIntersections(geoj);
+          geoj = checkForIntersections(geoj);
           geoj = geometryCheck(geoj);
           setLayer(geoj);
         } catch (e) {
@@ -257,7 +249,7 @@ const EditTool = props => {
         try {
           let geoj = unify(dragend.layer.toGeoJSON());
           geoj = geometryCheck(geoj);
-          //geoj = checkForIntersections(geoj);
+          geoj = checkForIntersections(geoj);
           geoj = geometryCheck(geoj);
           setLayer(geoj);
         } catch (e) {
@@ -326,6 +318,10 @@ const EditTool = props => {
     console.log(geomtryHistory);
   }, [geomtryHistory]);
 
+  useEffect(() => {
+    console.log(contextWithoutEditLayer);
+  }, [contextWithoutEditLayer]);
+
   return (
     <>
       <Box className={classes.buttonGroup}>
@@ -337,14 +333,14 @@ const EditTool = props => {
           onClick={drawSquare}
           color={activeSquare ? 'primary' : 'default'}
         >
-          <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
+          <FontAwesomeIcon icon={faDrawSquare} size="lg" />
         </Button>
         <Button
           className={classes.button}
           onClick={drawCircle}
           color={activeCircle ? 'primary' : 'default'}
         >
-          <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
+          <FontAwesomeIcon icon={faDrawCircle} size="lg" />
         </Button>
         <Button
           className={classes.button}
