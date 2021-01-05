@@ -31,7 +31,15 @@ import {
   polygonize,
   booleanPointInPolygon,
   pointOnFeature,
-  combine
+  combine,
+  featureEach,
+  flatten,
+  getCoords,
+  polygon,
+  multiPolygon,
+  featureCollection,
+  lineToPolygon,
+  buffer
 } from '@turf/turf';
 import useStateRef from 'react-usestateref';
 import { polygonCut } from '../../utils/functionsGeo';
@@ -87,8 +95,6 @@ const EditTool = props => {
 
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
-    console.log(contextLayer.hasLayer(editLayer));
-    console.log(editLayer);
     if (contextLayer.hasLayer(editLayer)) {
       SetContextWithoutEditLayer(contextLayer.removeLayer(editLayer));
     }
@@ -231,34 +237,30 @@ const EditTool = props => {
           const poly = editLayer.toGeoJSON();
           const line = end.layer.toGeoJSON();
 
-          console.log(poly);
-          console.log(line);
+          /*const flattenMultipolygon = flatten(poly);
+          let featuresCut = [];
 
-          const result = polygonCut(poly.geometry, line.geometry);
+          featureEach(flattenMultipolygon, function(
+            currentFeature,
+            featureIndex
+          ) {
+            const result = polygonCut(currentFeature.geometry, line.geometry);
+            featuresCut.push(result);
+          });
 
-          console.log(result);
+          const fc = featureCollection(featuresCut.flat());
+          const combined = combine(fc);
+          const geoj = geometryCheck(combined.features[0]);*/
 
-          /*const polyAsLine = polygonToLine(poly);
-          //console.log(polyAsLine);
-          const unionedLines = union(polyAsLine.features[0], line);
-
-          const polygonized = polygonize(unionedLines);
-          const keepFromPolygonized = polygonized['features'].filter(ea =>
-            booleanPointInPolygon(pointOnFeature(ea), poly)
-          );
-          console.log(keepFromPolygonized);
-          const multipolygon1 = combine(keepFromPolygonized);
-
-          console.log(multipolygon1);*/
-          /*let defaultGeom = [...geomtryHistory].pop();
-          let center = end.layer.toGeoJSON().geometry.coordinates;
-          let radius = end.layer._mRadius;
-          let drawGeom = circle(center, radius, {
-            steps: 30,
+          let thickLinePolygon = lineToPolygon(line.geometry);
+          console.log(thickLinePolygon);
+          thickLinePolygon = buffer(thickLinePolygon, 5, {
             units: 'meters'
           });
-          drawProcess(drawGeom, defaultGeom);*/
-          console.log('dividir');
+          let clipped = difference(poly, thickLinePolygon);
+
+          console.log(clipped);
+          setLayer(clipped);
         } catch (e) {
           console.log(e);
           errorGeometry();
@@ -293,7 +295,8 @@ const EditTool = props => {
     if (!lay.listens('editable:vertex:dragend')) {
       lay.on('editable:vertex:dragend', function(dragend) {
         try {
-          let geoj = unify(dragend.layer.toGeoJSON());
+          //let geoj = unify(dragend.layer.toGeoJSON());
+          let geoj = dragend.layer.toGeoJSON();
           geoj = geometryCheck(geoj);
           geoj = checkForIntersections(geoj);
           geoj = geometryCheck(geoj);
@@ -308,7 +311,8 @@ const EditTool = props => {
     if (!lay.listens('editable:vertex:deleted')) {
       lay.on('editable:vertex:deleted', function(dragend) {
         try {
-          let geoj = unify(dragend.layer.toGeoJSON());
+          //let geoj = unify(dragend.layer.toGeoJSON());
+          let geoj = dragend.layer.toGeoJSON();
           geoj = geometryCheck(geoj);
           geoj = checkForIntersections(geoj);
           geoj = geometryCheck(geoj);

@@ -107,7 +107,6 @@ export function geometryCheck(geom) {
     return geom;
   } catch (e) {
     console.log(e);
-    throw 'Error.';
   }
 }
 
@@ -176,9 +175,9 @@ export function unify(polyList) {
   return unionTemp;
 }
 
-export function polygonCut(polygon, line, idPrefix) {
+export function polygonCut(polygon, line) {
   const THICK_LINE_UNITS = 'kilometers';
-  const THICK_LINE_WIDTH = 0.001;
+  const THICK_LINE_WIDTH = 0.0001;
   var i, j, id, intersectPoints, lineCoords, forCut, forSelect;
   var thickLineString, thickLinePolygon, clipped, polyg, intersect;
   var polyCoords = [];
@@ -192,10 +191,6 @@ export function polygonCut(polygon, line, idPrefix) {
     line.type != 'LineString'
   ) {
     return retVal;
-  }
-
-  if (typeof idPrefix === 'undefined') {
-    idPrefix = '';
   }
 
   intersectPoints = turf.lineIntersect(polygon, line);
@@ -232,6 +227,7 @@ export function polygonCut(polygon, line, idPrefix) {
 
     thickLineString = turf.lineString(polyCoords);
     thickLinePolygon = turf.lineToPolygon(thickLineString);
+    console.log(thickLinePolygon);
     clipped = turf.difference(polygon, thickLinePolygon);
 
     cutPolyGeoms = [];
@@ -244,12 +240,11 @@ export function polygonCut(polygon, line, idPrefix) {
     }
 
     cutPolyGeoms.forEach(function(geometry, index) {
-      id = idPrefix + (i + 1) + '.' + (index + 1);
-      cutFeatures.push(turf.polygon(geometry, { id: id }));
+      cutFeatures.push(turf.polygon(geometry));
     });
   }
 
-  if (cutFeatures.length > 0) retVal = turf.featureCollection(cutFeatures);
+  //if (cutFeatures.length > 0) retVal = turf.featureCollection(cutFeatures);
 
-  return retVal;
+  return cutFeatures;
 }
