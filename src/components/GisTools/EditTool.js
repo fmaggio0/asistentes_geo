@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import Divider from '@material-ui/core/Divider';
+import Tooltip from '@material-ui/core/Tooltip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
@@ -63,14 +64,14 @@ const useStyles = makeStyles(theme => ({
     height: 35,
     minWidth: 35,
     borderRadius: 0,
-    '&:disabled': {
+    /*'&:disabled': {
       backgroundColor: theme.palette.primary.light,
       color: theme.palette.primary.main,
       borderRight: 'inherit !important',
       borderRadius: 0,
       borderTopLeftRadius: 4,
       borderBottomLeftRadius: 4
-    },
+    },*/
     '&:not(:last-child)': {
       borderRight: 0
     }
@@ -95,9 +96,11 @@ const EditTool = props => {
 
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
-    if (contextLayer.hasLayer(editLayer)) {
+    /*if (contextLayer.hasLayer(editLayer)) {
       SetContextWithoutEditLayer(contextLayer.removeLayer(editLayer));
-    }
+    }*/
+
+    //SetContextWithoutEditLayer(contextLayer.removeLayer(editLayer))
 
     return () => {
       console.log('unmont');
@@ -213,7 +216,8 @@ const EditTool = props => {
 
   const checkForIntersections = drawGeom => {
     let diff;
-    contextWithoutEditLayerRef.current.eachLayer(function(layer) {
+
+    contextLayer.eachLayer(function(layer) {
       diff = difference(drawGeom, layer.toGeoJSON());
     });
     return diff;
@@ -236,30 +240,11 @@ const EditTool = props => {
         try {
           const poly = editLayer.toGeoJSON();
           const line = end.layer.toGeoJSON();
-
-          /*const flattenMultipolygon = flatten(poly);
-          let featuresCut = [];
-
-          featureEach(flattenMultipolygon, function(
-            currentFeature,
-            featureIndex
-          ) {
-            const result = polygonCut(currentFeature.geometry, line.geometry);
-            featuresCut.push(result);
-          });
-
-          const fc = featureCollection(featuresCut.flat());
-          const combined = combine(fc);
-          const geoj = geometryCheck(combined.features[0]);*/
-
-          let thickLinePolygon = lineToPolygon(line.geometry);
-          console.log(thickLinePolygon);
-          thickLinePolygon = buffer(thickLinePolygon, 5, {
+          const LinePolygon = buffer(line, 1, {
             units: 'meters'
           });
-          let clipped = difference(poly, thickLinePolygon);
+          const clipped = difference(poly, LinePolygon);
 
-          console.log(clipped);
           setLayer(clipped);
         } catch (e) {
           console.log(e);
@@ -295,8 +280,8 @@ const EditTool = props => {
     if (!lay.listens('editable:vertex:dragend')) {
       lay.on('editable:vertex:dragend', function(dragend) {
         try {
-          //let geoj = unify(dragend.layer.toGeoJSON());
-          let geoj = dragend.layer.toGeoJSON();
+          let geoj = unify(dragend.layer.toGeoJSON());
+          //let geoj = dragend.layer.toGeoJSON();
           geoj = geometryCheck(geoj);
           geoj = checkForIntersections(geoj);
           geoj = geometryCheck(geoj);
@@ -311,8 +296,8 @@ const EditTool = props => {
     if (!lay.listens('editable:vertex:deleted')) {
       lay.on('editable:vertex:deleted', function(dragend) {
         try {
-          //let geoj = unify(dragend.layer.toGeoJSON());
-          let geoj = dragend.layer.toGeoJSON();
+          let geoj = unify(dragend.layer.toGeoJSON());
+          //let geoj = dragend.layer.toGeoJSON();
           geoj = geometryCheck(geoj);
           geoj = checkForIntersections(geoj);
           geoj = geometryCheck(geoj);
@@ -391,67 +376,92 @@ const EditTool = props => {
     <>
       <Box className={classes.editGroup}>
         <Box className={classes.buttongroup}>
-          <Button
-            className={classes.button}
-            onClick={drawSquare}
-            color={activeSquare ? 'primary' : 'default'}
-          >
-            <FontAwesomeIcon icon={faDrawSquare} size="lg" />
-          </Button>
-          <Button
-            className={classes.button}
-            onClick={drawCircle}
-            color={activeCircle ? 'primary' : 'default'}
-          >
-            <FontAwesomeIcon icon={faDrawCircle} size="lg" />
-          </Button>
-          <Button
-            className={classes.button}
-            onClick={drawPolygon}
-            color={activePolygon ? 'primary' : 'default'}
-          >
-            <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
-          </Button>
+          <Tooltip title="Dibujar rectangulo" arrow>
+            <Button
+              className={classes.button}
+              onClick={drawSquare}
+              color={activeSquare ? 'primary' : 'default'}
+            >
+              <FontAwesomeIcon icon={faDrawSquare} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Dibujar circulo" arrow>
+            <Button
+              className={classes.button}
+              onClick={drawCircle}
+              color={activeCircle ? 'primary' : 'default'}
+            >
+              <FontAwesomeIcon icon={faDrawCircle} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Dibujar poligono" arrow>
+            <Button
+              className={classes.button}
+              onClick={drawPolygon}
+              color={activePolygon ? 'primary' : 'default'}
+            >
+              <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
+            </Button>
+          </Tooltip>
           <Box style={{ paddingTop: 5, paddingBottom: 5 }}>
             <Divider
               orientation="vertical"
               style={{ width: 2, backgroundColor: '#263238' }}
             />
           </Box>
-          <Button
-            className={classes.button}
-            onClick={() => setActiveCut(!activeCut)}
-            color={activeCut ? 'primary' : 'default'}
-          >
-            <FontAwesomeIcon icon={faCut} size="lg" />
-          </Button>
+          <Tooltip title="Activar corte" arrow>
+            <Button
+              className={classes.button}
+              onClick={() => setActiveCut(!activeCut)}
+              color={activeCut ? 'primary' : 'default'}
+            >
+              <FontAwesomeIcon icon={faCut} size="lg" />
+            </Button>
+          </Tooltip>
         </Box>
 
         <Box className={classes.buttongroup}>
-          <Button className={classes.button}>
-            <FontAwesomeIcon icon={faMousePointer} size="lg" />
-          </Button>
-          <Button className={classes.button} onClick={cutWithLine}>
-            <FontAwesomeIcon icon={faScalpelPath} size="lg" />
-          </Button>
-          <Button className={classes.button}>
-            <FontAwesomeIcon icon={faObjectGroup} size="lg" />
-          </Button>
-          <Button className={classes.button} onClick={undoGeometry}>
-            <FontAwesomeIcon icon={faUndo} size="lg" />
-          </Button>
+          <Tooltip title="Seleccionar objectos" arrow>
+            <Button className={classes.button}>
+              <FontAwesomeIcon icon={faMousePointer} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Dividir objeto" arrow>
+            <Button className={classes.button} onClick={cutWithLine}>
+              <FontAwesomeIcon icon={faScalpelPath} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Agrupar objetos" arrow>
+            <Button className={classes.button} disabled={true}>
+              <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Volver atras" arrow>
+            <Button className={classes.button} onClick={undoGeometry}>
+              <FontAwesomeIcon icon={faUndo} size="lg" />
+            </Button>
+          </Tooltip>
         </Box>
 
         <Box className={classes.buttongroup}>
-          <Button className={classes.button}>
-            <FontAwesomeIcon icon={faTrashAlt} size="lg" />
-          </Button>
-          <Button className={classes.button}>
-            <FontAwesomeIcon icon={faPlus} size="lg" />
-          </Button>
-          <Button className={classes.button} onClick={() => props.unmountMe()}>
-            <FontAwesomeIcon icon={faTimes} size="lg" />
-          </Button>
+          <Tooltip title="Eliminar objeto" arrow>
+            <Button className={classes.button} disabled={true}>
+              <FontAwesomeIcon icon={faTrashAlt} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Agregar nuevo objeto" arrow>
+            <Button className={classes.button}>
+              <FontAwesomeIcon icon={faPlus} size="lg" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Cerrar edición" arrow>
+            <Button
+              className={classes.button}
+              onClick={() => props.unmountMe()}
+            >
+              <FontAwesomeIcon icon={faTimes} size="lg" />
+            </Button>
+          </Tooltip>
         </Box>
       </Box>
     </>
