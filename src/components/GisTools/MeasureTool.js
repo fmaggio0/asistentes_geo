@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
+import Box from '@material-ui/core/Box';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faRulerVertical,
@@ -12,20 +12,30 @@ import {
 import MapContext from 'src/contexts/MapContext';
 
 const useStyles = makeStyles(theme => ({
-  buttonGroup: {
+  buttongroup: {
     position: 'absolute',
     zIndex: 800,
     bottom: '20px',
-    right: '10px'
+    right: '10px',
+    backgroundColor: theme.palette.background.paper1,
+    borderRadius: 4
+    //display: 'inline-flex',
+    //marginLeft: 10
   },
   button: {
     width: 35,
     height: 35,
-    padding: 0,
+    minWidth: 35,
     '&:disabled': {
       backgroundColor: theme.palette.primary.light,
       color: theme.palette.primary.main,
-      borderRight: 'inherit !important'
+      borderRight: 'inherit !important',
+      //borderRadius: 0,
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0
+    },
+    '&:not(:last-child)': {
+      borderRight: 0
     }
   }
 }));
@@ -78,7 +88,7 @@ const MeasureTool = props => {
 
   return (
     <>
-      <ButtonGroup className={classes.buttonGroup}>
+      <Box className={classes.buttongroup}>
         <Button
           onClick={openToggleGroup}
           variant="contained"
@@ -87,27 +97,37 @@ const MeasureTool = props => {
         >
           <FontAwesomeIcon icon={faRuler} />
         </Button>
-      </ButtonGroup>
+      </Box>
       {toggleGroup && (
-        <ButtonGroup
-          variant="contained"
-          color="default"
-          className={classes.buttonGroup}
-          aria-label="contained primary button group"
-        >
+        <Box className={classes.buttongroup}>
           <Button className={classes.button} disabled>
             <FontAwesomeIcon icon={faRuler} />
           </Button>
-          <Button onClick={measureByLine} className={classes.button}>
+          <Button
+            onClick={measureByLine}
+            className={classes.button}
+            style={{ borderRadius: 0 }}
+          >
             <FontAwesomeIcon icon={faRulerVertical} />
           </Button>
-          <Button onClick={measureByPolygon} className={classes.button}>
+          <Button
+            onClick={measureByPolygon}
+            className={classes.button}
+            style={{ borderRadius: 0 }}
+          >
             <FontAwesomeIcon icon={faRulerCombined} />
           </Button>
-          <Button onClick={closeToggleGroup} className={classes.button}>
+          <Button
+            onClick={closeToggleGroup}
+            className={classes.button}
+            style={{
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0
+            }}
+          >
             <FontAwesomeIcon icon={faTimes} />
           </Button>
-        </ButtonGroup>
+        </Box>
       )}
     </>
   );

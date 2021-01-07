@@ -42,8 +42,6 @@ import {
   lineToPolygon,
   buffer
 } from '@turf/turf';
-import useStateRef from 'react-usestateref';
-import { polygonCut } from '../../utils/functionsGeo';
 
 const useStyles = makeStyles(theme => ({
   editGroup: {
@@ -85,23 +83,12 @@ const EditTool = props => {
   const [activeCircle, setActiveCircle] = useState(false);
   const [activePolygon, setActivePolygon] = useState(false);
   const [activeCut, setActiveCut] = useState(false);
-  const [
-    contextWithoutEditLayer,
-    SetContextWithoutEditLayer,
-    contextWithoutEditLayerRef
-  ] = useStateRef(null);
   const [geomtryHistory, setGeomtryHistory] = useState([]);
   const mapContext = useContext(MapContext);
   const { editLayer, contextLayer } = props;
 
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
-    /*if (contextLayer.hasLayer(editLayer)) {
-      SetContextWithoutEditLayer(contextLayer.removeLayer(editLayer));
-    }*/
-
-    //SetContextWithoutEditLayer(contextLayer.removeLayer(editLayer))
-
     return () => {
       console.log('unmont');
       mapContext.state.map.editTools.featuresLayer.clearLayers();
@@ -216,9 +203,12 @@ const EditTool = props => {
 
   const checkForIntersections = drawGeom => {
     let diff;
-
     contextLayer.eachLayer(function(layer) {
+      /*if (!contextLayer.hasLayer(layer)) {*/
       diff = difference(drawGeom, layer.toGeoJSON());
+      /*} else {
+        diff = drawGeom;
+      }*/
     });
     return diff;
   };
@@ -238,7 +228,7 @@ const EditTool = props => {
     geom.on('editable:drawing:end', function(end) {
       if (end.layer._map) {
         try {
-          const poly = editLayer.toGeoJSON();
+          const poly = [...geomtryHistory].pop();
           const line = end.layer.toGeoJSON();
           const LinePolygon = buffer(line, 1, {
             units: 'meters'
@@ -406,7 +396,12 @@ const EditTool = props => {
           <Box style={{ paddingTop: 5, paddingBottom: 5 }}>
             <Divider
               orientation="vertical"
-              style={{ width: 2, backgroundColor: '#263238' }}
+              style={{
+                width: 2,
+                backgroundColor: '#263238',
+                marginLeft: 3,
+                marginRight: 3
+              }}
             />
           </Box>
           <Tooltip title="Activar corte" arrow>
@@ -431,10 +426,12 @@ const EditTool = props => {
               <FontAwesomeIcon icon={faScalpelPath} size="lg" />
             </Button>
           </Tooltip>
-          <Tooltip title="Agrupar objetos" arrow>
-            <Button className={classes.button} disabled={true}>
-              <FontAwesomeIcon icon={faObjectGroup} size="lg" />
-            </Button>
+          <Tooltip title="Seleccione dos o mas objetos" arrow>
+            <div>
+              <Button className={classes.button} disabled={true}>
+                <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+              </Button>
+            </div>
           </Tooltip>
           <Tooltip title="Volver atras" arrow>
             <Button className={classes.button} onClick={undoGeometry}>
@@ -445,7 +442,7 @@ const EditTool = props => {
 
         <Box className={classes.buttongroup}>
           <Tooltip title="Eliminar objeto" arrow>
-            <Button className={classes.button} disabled={true}>
+            <Button className={classes.button}>
               <FontAwesomeIcon icon={faTrashAlt} size="lg" />
             </Button>
           </Tooltip>
