@@ -16,8 +16,8 @@ import EditTool from 'src/components/GisTools/EditTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 
-// store the map configuration properties in an object,
-// we could also move this to a separate file & import it if desired.
+// store the map configuration properties in an object.
+
 let config = {};
 config.params = {
   center: [40.655769, -73.938503],
@@ -75,7 +75,8 @@ class Map extends Component {
       geojson: null,
       numEntrances: null,
       selected: null,
-      editSelected: false
+      editSelected: false,
+      cursor: null
     };
     this._mapNode = null;
     this.onEachFeature = this.onEachFeature.bind(this);
@@ -115,6 +116,11 @@ class Map extends Component {
       numEntrances: geojson.features.length,
       geojson: lotes
     });
+  }
+
+  cursorOnMap(type) {
+    if (type) this.setState({ cursor: type });
+    else this.setState({ cursor: null });
   }
 
   addGeoJSONLayer(geojson) {
@@ -238,6 +244,7 @@ class Map extends Component {
           ref={node => (this._mapNode = node)}
           id="map"
           className={classes.map}
+          style={this.state.cursor ? { cursor: this.state.cursor } : {}}
         />
       </div>
     );
