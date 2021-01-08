@@ -84,6 +84,7 @@ class Map extends Component {
     this.dehighlight = this.dehighlight.bind(this);
     this.select = this.select.bind(this);
     this.handleEditTools = this.handleEditTools.bind(this);
+    this.updateVectorLayer = this.updateVectorLayer.bind(this);
   }
 
   componentDidMount() {
@@ -137,9 +138,10 @@ class Map extends Component {
 
     //lotes
     let layer = {
-      name: 'Lotes',
+      name: 'lotes',
       layer: geojsonLayer
     };
+
     // store the Leaflet GeoJSON layer in our component state for use later
     this.setState({
       geojsonLayer,
@@ -148,6 +150,36 @@ class Map extends Component {
 
     // fit the geographic extent of the GeoJSON layer within the map's bounds / viewport
     this.zoomToFeature(geojsonLayer);
+  }
+
+  updateVectorLayer(data) {
+    console.log(data.id);
+    console.log(data.type);
+    console.log(data.geojson);
+
+    /*this.setState({
+      vectorLayers
+    })*/
+
+    const geojsonLayer = L.geoJson(data.geojson, {
+      onEachFeature: this.onEachFeature,
+      style: function() {
+        return styleEmpty;
+      }
+    });
+
+    let found = this.state.vectorLayers.find(
+      element => element.name === data.type
+    );
+
+    found.layer.eachLayer(function(layer) {
+      if (data.id === layer._leaflet_id) {
+        console.log('entro');
+        layer = geojsonLayer;
+      }
+    });
+
+    console.log(found.layer.toGeoJSON());
   }
 
   zoomToFeature(target) {
@@ -233,9 +265,10 @@ class Map extends Component {
               editLayer={this.state.selected}
               contextLayer={
                 this.state.vectorLayers.find(
-                  element => element.name === 'Lotes'
+                  element => element.name === 'lotes'
                 ).layer
               }
+              result={this.updateVectorLayer}
               unmountMe={this.handleEditTools}
             />
           )}
