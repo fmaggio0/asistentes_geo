@@ -15,6 +15,7 @@ import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
 import EditTool from 'src/components/GisTools/EditTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
+import * as turf from '@turf/turf';
 
 // store the map configuration properties in an object.
 
@@ -153,33 +154,11 @@ class Map extends Component {
   }
 
   updateVectorLayer(data) {
-    console.log(data.id);
-    console.log(data.type);
-    console.log(data.geojson);
-
-    /*this.setState({
-      vectorLayers
-    })*/
-
-    const geojsonLayer = L.geoJson(data.geojson, {
-      onEachFeature: this.onEachFeature,
-      style: function() {
-        return styleEmpty;
-      }
-    });
-
     let found = this.state.vectorLayers.find(
       element => element.name === data.type
     );
-
-    found.layer.eachLayer(function(layer) {
-      if (data.id === layer._leaflet_id) {
-        console.log('entro');
-        layer = geojsonLayer;
-      }
-    });
-
-    console.log(found.layer.toGeoJSON());
+    found.layer.removeLayer(found.layer.getLayer(data.id));
+    found.layer.addData(data.geojson);
   }
 
   zoomToFeature(target) {

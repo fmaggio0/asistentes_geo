@@ -96,6 +96,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const EditTool = props => {
+  var useStateRef = require('react-usestateref');
   const classes = useStyles();
   const [toggleGroup, setToggleGroup] = useState(false);
   const [activeSquare, setActiveSquare] = useState(false);
@@ -106,7 +107,9 @@ const EditTool = props => {
     isActive: false,
     text: ''
   });
-  const [geomtryHistory, setGeomtryHistory] = useState([]);
+  const [geomtryHistory, setGeomtryHistory, geomtryHistoryRef] = useStateRef(
+    []
+  );
   const [editableLayer, setEditableLayer] = useState(null);
   const [editLayerProperties, setEditLayerProperties] = useState(null);
   const [ungroupLayer, setUngroupLayer] = useState(null);
@@ -117,11 +120,16 @@ const EditTool = props => {
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
     setEditLayerProperties(editLayer.toGeoJSON().properties);
+    //setGeomtryHistory(oldArray => [...oldArray, editLayer.toGeoJSON()]);
     return () => {
       console.log('unmont');
       mapContext.state.map.editTools.featuresLayer.clearLayers();
     };
   }, []);
+
+  useEffect(() => {
+    console.log(geomtryHistory);
+  }, [geomtryHistory]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -206,19 +214,17 @@ const EditTool = props => {
   };
 
   const errorGeometry = () => {
-    let lastChange = [...geomtryHistory].pop();
-
+    let lastChange = [...geomtryHistoryRef.current].pop();
     if (lastChange) setLayer(lastChange, true);
   };
 
   const undoGeometry = e => {
+    console.log('entro undo');
     if (geomtryHistory.length > 1) {
       setGeomtryHistory(
         geomtryHistory.filter((_, i) => i !== geomtryHistory.length - 1)
       );
       let lastChange = [...geomtryHistory].splice(-2, 1)[0];
-      mapContext.state.map.editTools.featuresLayer.clearLayers();
-
       if (lastChange) setLayer(lastChange, true);
     }
   };
@@ -245,13 +251,18 @@ const EditTool = props => {
 
   const checkForIntersections = drawGeom => {
     let diff;
-    contextLayer.eachLayer(function(layer) {
-      /*if (!contextLayer.hasLayer(layer)) {*/
-      diff = difference(drawGeom, layer.toGeoJSON());
-      /*} else {
-        diff = drawGeom;
-      }*/
-    });
+    //let contextLayerCopy = contextLayer;
+    let combined = combine(contextLayer.toGeoJSON());
+    let contextWithoutEditLayer = difference(
+      combined.features[0],
+      editLayer.toGeoJSON()
+    );
+
+    console.log(drawGeom);
+    console.log(contextWithoutEditLayer);
+
+    diff = difference(drawGeom, contextWithoutEditLayer);
+
     return diff;
   };
 
@@ -322,6 +333,7 @@ const EditTool = props => {
       type: 'lotes',
       geojson: resultGeoJson
     });
+    props.unmountMe();
   };
 
   const setEvents = lay => {
