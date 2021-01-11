@@ -113,30 +113,31 @@ const EditTool = props => {
   const [editableLayer, setEditableLayer] = useState(null);
   const [editLayerProperties, setEditLayerProperties] = useState(null);
   const [ungroupLayer, setUngroupLayer] = useState(null);
+  const [groupLayer, setGroupLayer] = useState(null);
   const mapContext = useContext(MapContext);
   const { editLayer, contextLayer } = props;
-  const [open, setOpen] = useState(false);
+  const [ungroupOpen, setUngroupOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
 
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
     setEditLayerProperties(editLayer.toGeoJSON().properties);
-    //setGeomtryHistory(oldArray => [...oldArray, editLayer.toGeoJSON()]);
     return () => {
-      console.log('unmont');
       mapContext.state.map.editTools.featuresLayer.clearLayers();
+      mapContext.cursorOnMap();
     };
   }, []);
 
   useEffect(() => {
-    console.log(geomtryHistory);
+    //console.log(geomtryHistory);
   }, [geomtryHistory]);
 
-  const handleOpen = () => {
-    setOpen(true);
+  const handleCloseGroup = () => {
+    setGroupOpen(false);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCloseUngroup = () => {
+    setUngroupOpen(false);
   };
 
   /*useEffect(() => {
@@ -251,16 +252,12 @@ const EditTool = props => {
 
   const checkForIntersections = drawGeom => {
     let diff;
-    //let contextLayerCopy = contextLayer;
+    //Revisar diferencia con otros lotes
     let combined = combine(contextLayer.toGeoJSON());
     let contextWithoutEditLayer = difference(
       combined.features[0],
       editLayer.toGeoJSON()
     );
-
-    console.log(drawGeom);
-    console.log(contextWithoutEditLayer);
-
     diff = difference(drawGeom, contextWithoutEditLayer);
 
     return diff;
@@ -314,15 +311,77 @@ const EditTool = props => {
             text: ''
           });
           setUngroupLayer(currentFeature);
-          handleOpen();
+          setUngroupOpen(true);
         }
       });
     });
   };
 
   const confirmUngroup = () => {
-    handleClose();
-    console.log(ungroupLayer);
+    let editLayerLessDiff = difference(editLayer.toGeoJSON(), ungroupLayer);
+    editLayerLessDiff.properties = editLayerProperties;
+    ungroupLayer.properties = editLayerProperties;
+
+    props.result([
+      {
+        id: editLayer._leaflet_id,
+        type: 'lotes',
+        geojson: editLayerLessDiff
+      },
+      {
+        id: null,
+        type: 'lotes',
+        geojson: ungroupLayer
+      }
+    ]);
+
+    handleCloseUngroup();
+    props.unmountMe();
+  };
+
+  const groupObject = e => {
+    mapContext.cursorOnMap('pointer');
+    setMouseTooltip({
+      isActive: true,
+      text: 'Elija uno o mas objetos para agrupar.'
+    });
+    contextLayer.once('click', function(e) {
+      console.log('context click');
+      let flat = flatten(e.target.toGeoJSON());
+      let point1 = point([e.latlng.lng, e.latlng.lat]);
+      featureEach(flat, function(currentFeature, featureIndex) {
+        if (booleanPointInPolygon(point1, currentFeature)) {
+          setMouseTooltip({
+            isActive: false,
+            text: ''
+          });
+          setGroupLayer(currentFeature);
+          setGroupOpen(true);
+        }
+      });
+    });
+  };
+
+  const confirmGroup = () => {
+    let editLayerLessDiff = difference(editLayer.toGeoJSON(), ungroupLayer);
+    editLayerLessDiff.properties = editLayerProperties;
+    ungroupLayer.properties = editLayerProperties;
+
+    props.result([
+      {
+        id: editLayer._leaflet_id,
+        type: 'lotes',
+        geojson: editLayerLessDiff
+      },
+      {
+        id: null,
+        type: 'lotes',
+        geojson: ungroupLayer
+      }
+    ]);
+
+    handleCloseUngroup();
+    props.unmountMe();
   };
 
   const saveEditLayer = () => {
@@ -358,6 +417,14 @@ const EditTool = props => {
     } else {
       snap.enable();
     }
+
+    //Verificar punto que queda cuando se guarda geom (relacionado a snap)
+    /*if (!lay.listens('editable:disable')) {
+      lay.on('editable:disable', function(dragend) {
+        console.log('snap.disable');
+        snap.disable();
+      });
+    }*/
 
     if (!lay.listens('editable:vertex:dragend')) {
       lay.on('editable:vertex:dragend', function(dragend) {
@@ -465,7 +532,7 @@ const EditTool = props => {
           </Paper>
         </MouseTooltip>
       )}
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={ungroupOpen} onClose={handleCloseUngroup}>
         <DialogTitle disableTypography>
           <Typography variant="h4">¿Desea desagregar el objeto?</Typography>
         </DialogTitle>
@@ -475,7 +542,7 @@ const EditTool = props => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="default">
+          <Button onClick={handleCloseUngroup} color="default">
             Cancelar
           </Button>
           <Button
@@ -488,6 +555,33 @@ const EditTool = props => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={groupOpen} onClose={handleCloseGroup}>
+        <DialogTitle disableTypography>
+          <Typography variant="h4">
+            ¿Desea combinar los objetos seleccionados?
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            El objeto resultante mantendrá los mismos atributos que el original.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseGroup} color="default">
+            Cancelar
+          </Button>
+          <Button
+            onClick={confirmUngroup}
+            color="primary"
+            variant="contained"
+            autoFocus
+          >
+            Ok
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Box className={classes.editGroup}>
         <Box className={classes.buttongroup}>
           <Tooltip title="Dibujar rectangulo" arrow>
@@ -545,7 +639,7 @@ const EditTool = props => {
             </Button>
           </Tooltip>
           <Tooltip title="Agrupar objectos en multiparte" arrow>
-            <Button className={classes.button}>
+            <Button className={classes.button} onClick={groupObject}>
               <FontAwesomeIcon icon={faObjectGroup} size="lg" />
             </Button>
           </Tooltip>

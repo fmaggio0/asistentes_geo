@@ -1,4 +1,5 @@
 import * as turf from '@turf/turf';
+import geojsonhint from '@mapbox/geojsonhint';
 
 export function convertDegToDms(dd, longOrLat) {
   let hemisphere = /^[WE]|(?:lon)/i.test(longOrLat)
@@ -87,14 +88,14 @@ export function geometryCheck(geom) {
       geom = turf.multiPolygon(array);
     }
 
-    if (geom.geometry.type == 'MultiPolygon') {
+    if (geom.geometry.type === 'MultiPolygon') {
       //limpiar geometrias con menos de 100mts2 (ej: lineas entre lotes)
       geom = cleanGeometries(geom, 100);
     }
 
     if (
-      geom.geometry.type != 'MultiPolygon' &&
-      geom.geometry.type != 'Polygon'
+      geom.geometry.type !== 'MultiPolygon' &&
+      geom.geometry.type !== 'Polygon'
     ) {
       throw 'No es poligono ni multipoligono.';
     }
@@ -103,6 +104,8 @@ export function geometryCheck(geom) {
 
     if (turf.area(geom) < 100)
       throw 'La geometria debe tener como minimo 100mts2.';
+
+    console.log(geojsonhint.hint(geom));
 
     return geom;
   } catch (e) {

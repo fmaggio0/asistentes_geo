@@ -154,10 +154,19 @@ class Map extends Component {
   }
 
   updateVectorLayer(data) {
-    let found = this.state.vectorLayers.find(
-      element => element.name === data.type
-    );
-    found.layer.removeLayer(found.layer.getLayer(data.id));
+    if (Array.isArray(data)) {
+      data.forEach(element => {
+        let found = this.state.vectorLayers.find(e => e.name === element.type);
+        if (element.id !== null)
+          found.layer.removeLayer(found.layer.getLayer(element.id));
+        found.layer.addData(element.geojson);
+      });
+      return;
+    }
+
+    let found = this.state.vectorLayers.find(e => e.name === data.type);
+    if (data.id !== null)
+      found.layer.removeLayer(found.layer.getLayer(data.id));
     found.layer.addData(data.geojson);
   }
 
