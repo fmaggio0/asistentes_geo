@@ -15,9 +15,10 @@ import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
 import EditTool from 'src/components/GisTools/EditTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
+import * as turf from '@turf/turf';
 
-// store the map configuration properties in an object,
-// we could also move this to a separate file & import it if desired.
+// store the map configuration properties in an object.
+
 let config = {};
 config.params = {
   center: [40.655769, -73.938503],
@@ -75,7 +76,8 @@ class Map extends Component {
       geojson: null,
       numEntrances: null,
       selected: null,
-      editSelected: false
+      editSelected: false,
+      cursor: null
     };
     this._mapNode = null;
     this.onEachFeature = this.onEachFeature.bind(this);
@@ -83,6 +85,7 @@ class Map extends Component {
     this.dehighlight = this.dehighlight.bind(this);
     this.select = this.select.bind(this);
     this.handleEditTools = this.handleEditTools.bind(this);
+    this.updateVectorLayer = this.updateVectorLayer.bind(this);
   }
 
   componentDidMount() {
@@ -117,6 +120,11 @@ class Map extends Component {
     });
   }
 
+  cursorOnMap(type) {
+    if (type) this.setState({ cursor: type });
+    else this.setState({ cursor: null });
+  }
+
   addGeoJSONLayer(geojson) {
     // create a native Leaflet GeoJSON SVG Layer to add as an interactive overlay to the map
     // an options object is passed to define functions for customizing the layer
@@ -131,9 +139,10 @@ class Map extends Component {
 
     //lotes
     let layer = {
-      name: 'Lotes',
+      name: 'lotes',
       layer: geojsonLayer
     };
+
     // store the Leaflet GeoJSON layer in our component state for use later
     this.setState({
       geojsonLayer,
@@ -142,6 +151,14 @@ class Map extends Component {
 
     // fit the geographic extent of the GeoJSON layer within the map's bounds / viewport
     this.zoomToFeature(geojsonLayer);
+  }
+
+  updateVectorLayer(data) {
+    let found = this.state.vectorLayers.find(
+      element => element.name === data.type
+    );
+    found.layer.removeLayer(found.layer.getLayer(data.id));
+    found.layer.addData(data.geojson);
   }
 
   zoomToFeature(target) {
@@ -227,9 +244,10 @@ class Map extends Component {
               editLayer={this.state.selected}
               contextLayer={
                 this.state.vectorLayers.find(
-                  element => element.name === 'Lotes'
+                  element => element.name === 'lotes'
                 ).layer
               }
+              result={this.updateVectorLayer}
               unmountMe={this.handleEditTools}
             />
           )}
@@ -238,6 +256,7 @@ class Map extends Component {
           ref={node => (this._mapNode = node)}
           id="map"
           className={classes.map}
+          style={this.state.cursor ? { cursor: this.state.cursor } : {}}
         />
       </div>
     );

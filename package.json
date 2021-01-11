@@ -85,6 +85,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.4",
     "react-step-wizard": "^5.3.5",
+    "react-sticky-mouse-tooltip": "^0.0.1",
     "react-usestateref": "^1.0.4",
     "redux": "^4.0.5",
     "redux-devtools-extension": "^2.13.8",
