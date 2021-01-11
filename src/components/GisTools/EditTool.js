@@ -13,7 +13,11 @@ import {
   faScalpelPath,
   faPlus
 } from '@fortawesome/pro-solid-svg-icons';
-import { faObjectGroup, faTrashAlt } from '@fortawesome/pro-regular-svg-icons';
+import {
+  faObjectGroup,
+  faObjectUngroup,
+  faTrashAlt
+} from '@fortawesome/pro-regular-svg-icons';
 import {
   faDrawSquare,
   faDrawCircle,
@@ -416,41 +420,35 @@ const EditTool = props => {
         </Box>
 
         <Box className={classes.buttongroup}>
-          <Tooltip title="Seleccionar objectos" arrow>
-            <Button className={classes.button}>
-              <FontAwesomeIcon icon={faMousePointer} size="lg" />
-            </Button>
-          </Tooltip>
           <Tooltip title="Dividir objeto" arrow>
             <Button className={classes.button} onClick={cutWithLine}>
               <FontAwesomeIcon icon={faScalpelPath} size="lg" />
             </Button>
           </Tooltip>
           <Tooltip title="Seleccione dos o mas objetos" arrow>
-            <div>
-              <Button className={classes.button} disabled={true}>
-                <FontAwesomeIcon icon={faObjectGroup} size="lg" />
-              </Button>
-            </div>
+            <Button className={classes.button}>
+              <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+            </Button>
           </Tooltip>
-          <Tooltip title="Volver atras" arrow>
-            <Button className={classes.button} onClick={undoGeometry}>
-              <FontAwesomeIcon icon={faUndo} size="lg" />
+          <Tooltip title="Seleccionar objectos" arrow>
+            <Button className={classes.button}>
+              <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
             </Button>
           </Tooltip>
         </Box>
 
         <Box className={classes.buttongroup}>
+          <Tooltip title="Volver atras" arrow>
+            <Button className={classes.button} onClick={undoGeometry}>
+              <FontAwesomeIcon icon={faUndo} size="lg" />
+            </Button>
+          </Tooltip>
           <Tooltip title="Eliminar objeto" arrow>
             <Button className={classes.button}>
               <FontAwesomeIcon icon={faTrashAlt} size="lg" />
             </Button>
           </Tooltip>
-          <Tooltip title="Agregar nuevo objeto" arrow>
-            <Button className={classes.button}>
-              <FontAwesomeIcon icon={faPlus} size="lg" />
-            </Button>
-          </Tooltip>
+
           <Tooltip title="Cerrar edición" arrow>
             <Button
               className={classes.button}
