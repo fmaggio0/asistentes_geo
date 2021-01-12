@@ -7,6 +7,12 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Dialog from '@material-ui/core/Dialog';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import TableBody from '@material-ui/core/TableBody';
+import TableHead from '@material-ui/core/TableHead';
+import Table from '@material-ui/core/Table';
+import Radio from '@material-ui/core/Radio';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -48,6 +54,7 @@ import {
   featureEach,
   flatten,
   getCoords,
+  getType,
   polygon,
   multiPolygon,
   featureCollection,
@@ -119,6 +126,13 @@ const EditTool = props => {
   const [ungroupOpen, setUngroupOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
 
+  const [group, setGroup] = useState({
+    openDialog: false,
+    selectLayers: [],
+    allProperties: [],
+    buttonToggle: false
+  });
+
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
     setEditLayerProperties(editLayer.toGeoJSON().properties);
@@ -128,12 +142,13 @@ const EditTool = props => {
     };
   }, []);
 
-  useEffect(() => {
+  /*useEffect(() => {
     //console.log(geomtryHistory);
-  }, [geomtryHistory]);
+    console.log();
+  }, [editLayer]);*/
 
   const handleCloseGroup = () => {
-    setGroupOpen(false);
+    setGroup({ openDialog: false });
   };
 
   const handleCloseUngroup = () => {
@@ -341,6 +356,9 @@ const EditTool = props => {
 
   const groupObject = e => {
     mapContext.cursorOnMap('pointer');
+    setGroup({
+      buttonToggle: true
+    });
     setMouseTooltip({
       isActive: true,
       text: 'Elija uno o mas objetos para agrupar.'
@@ -349,21 +367,33 @@ const EditTool = props => {
       console.log('context click');
       let flat = flatten(e.target.toGeoJSON());
       let point1 = point([e.latlng.lng, e.latlng.lat]);
+      let featuresArray = [];
       featureEach(flat, function(currentFeature, featureIndex) {
         if (booleanPointInPolygon(point1, currentFeature)) {
-          setMouseTooltip({
-            isActive: false,
-            text: ''
-          });
-          setGroupLayer(currentFeature);
-          setGroupOpen(true);
+          featuresArray.push(currentFeature);
         }
+      });
+
+      console.log(featuresArray.concat(editLayer.toGeoJSON()));
+
+      setMouseTooltip({
+        isActive: false,
+        text: ''
+      });
+
+      setGroup({
+        openDialog: true,
+        selectLayers: featuresArray.concat(editLayer.toGeoJSON()),
+        allProperties: [],
+        buttonToggle: false
       });
     });
   };
 
   const confirmGroup = () => {
-    let editLayerLessDiff = difference(editLayer.toGeoJSON(), ungroupLayer);
+    console.log(group);
+    alert('ok');
+    /*let editLayerLessDiff = difference(editLayer.toGeoJSON(), ungroupLayer);
     editLayerLessDiff.properties = editLayerProperties;
     ungroupLayer.properties = editLayerProperties;
 
@@ -378,9 +408,9 @@ const EditTool = props => {
         type: 'lotes',
         geojson: ungroupLayer
       }
-    ]);
+    ]);*/
 
-    handleCloseUngroup();
+    handleCloseGroup();
     props.unmountMe();
   };
 
@@ -513,6 +543,7 @@ const EditTool = props => {
 
   return (
     <>
+      {/* MouseTooltip de asistencia */}
       {mouseTooltip.isActive && (
         <MouseTooltip
           visible={true}
@@ -532,56 +563,164 @@ const EditTool = props => {
           </Paper>
         </MouseTooltip>
       )}
-      <Dialog open={ungroupOpen} onClose={handleCloseUngroup}>
-        <DialogTitle disableTypography>
-          <Typography variant="h4">¿Desea desagregar el objeto?</Typography>
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            El objeto resultante mantendrá los mismos atributos que el original.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseUngroup} color="default">
-            Cancelar
-          </Button>
-          <Button
-            onClick={confirmUngroup}
-            color="primary"
-            variant="contained"
-            autoFocus
-          >
-            Ok
-          </Button>
-        </DialogActions>
-      </Dialog>
 
-      <Dialog open={groupOpen} onClose={handleCloseGroup}>
-        <DialogTitle disableTypography>
-          <Typography variant="h4">
-            ¿Desea combinar los objetos seleccionados?
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            El objeto resultante mantendrá los mismos atributos que el original.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseGroup} color="default">
-            Cancelar
-          </Button>
-          <Button
-            onClick={confirmUngroup}
-            color="primary"
-            variant="contained"
-            autoFocus
-          >
-            Ok
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Dialog desagrupar multipartes */}
+      {ungroupOpen && (
+        <Dialog open={ungroupOpen} onClose={handleCloseUngroup}>
+          <DialogTitle disableTypography>
+            <Typography variant="h4">¿Desea desagregar el objeto?</Typography>
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              El objeto resultante mantendrá los mismos atributos que el
+              original.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseUngroup} color="default">
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmUngroup}
+              color="primary"
+              variant="contained"
+              autoFocus
+            >
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
+      {/* Dialog agrupar en multipartes */}
+      {group.openDialog && (
+        <Dialog open={group.openDialog} onClose={handleCloseGroup}>
+          <DialogTitle disableTypography>
+            <Typography variant="h4">
+              ¿Desea combinar los objetos seleccionados?
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              <Table className={classes.table} aria-label="caption table">
+                <caption>Luego se podrán cambiar las propiedades</caption>
+                <TableBody>
+                  <TableRow>
+                    <TableCell variant="head">Crop</TableCell>
+                    <TableCell align="right">
+                      Corn{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      Corn
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell variant="head">Field</TableCell>
+                    <TableCell align="right">
+                      Land 19{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      L 20{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell variant="head">Hybrid/Variety</TableCell>
+                    <TableCell align="right">
+                      -Not assigned-{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      -Not assigned-{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell variant="head">Seeding date</TableCell>
+                    <TableCell align="right">
+                      2019-12-19{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      2019-12-20{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell variant="head">Surface (has)</TableCell>
+                    <TableCell align="right">
+                      35.4227003{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      31.648056{' '}
+                      <Radio
+                        value="a"
+                        name="radio-button-demo"
+                        inputProps={{ 'aria-label': 'A' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseGroup} color="default">
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmGroup}
+              color="primary"
+              variant="contained"
+              autoFocus
+            >
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Interfaz edit tools */}
       <Box className={classes.editGroup}>
         <Box className={classes.buttongroup}>
           <Tooltip title="Dibujar rectangulo" arrow>
@@ -639,14 +778,24 @@ const EditTool = props => {
             </Button>
           </Tooltip>
           <Tooltip title="Agrupar objectos en multiparte" arrow>
-            <Button className={classes.button} onClick={groupObject}>
+            <Button
+              className={classes.button}
+              onClick={groupObject}
+              color={group.buttonToggle ? 'primary' : 'default'}
+            >
               <FontAwesomeIcon icon={faObjectGroup} size="lg" />
             </Button>
           </Tooltip>
           <Tooltip title="Desagrupar objecto multiparte" arrow>
-            <Button className={classes.button} onClick={unGroupObject}>
-              <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
-            </Button>
+            <div>
+              <Button
+                className={classes.button}
+                onClick={unGroupObject}
+                disabled={flatten(editLayer.toGeoJSON()).features.length <= 1}
+              >
+                <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
+              </Button>
+            </div>
           </Tooltip>
         </Box>
         <Box className={classes.buttongroup}>

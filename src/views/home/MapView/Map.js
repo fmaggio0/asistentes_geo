@@ -77,7 +77,8 @@ class Map extends Component {
       numEntrances: null,
       selected: null,
       editSelected: false,
-      cursor: null
+      cursor: null,
+      lastZoom: null
     };
     this._mapNode = null;
     this.onEachFeature = this.onEachFeature.bind(this);
@@ -179,6 +180,17 @@ class Map extends Component {
     layer.on('click', e => {
       if (this.state.editSelected !== true) this.select(e.target);
     });
+
+    //Solo para lotes
+    layer
+      .bindTooltip(
+        feature.properties.Field + ' <br> ' + feature.properties.Crop,
+        {
+          permanent: true,
+          direction: 'center'
+        }
+      )
+      .openTooltip();
   }
 
   highlight(layer) {
@@ -234,6 +246,28 @@ class Map extends Component {
     ).addTo(map);
 
     map.measureTool = L.layerGroup().addTo(map);
+
+    //Zoom at level 12
+    let tooltipThreshold = 14;
+    map.on('zoomend', () => {
+      let zoom = map.getZoom();
+      let lastZoom;
+      if (this.state.lastZoom) lastZoom = this.state.lastZoom;
+      else lastZoom = map.getZoom();
+
+      if (
+        zoom < tooltipThreshold &&
+        (!lastZoom || lastZoom >= tooltipThreshold)
+      ) {
+        map.getPane('tooltipPane').style.display = 'none';
+      } else if (
+        zoom >= tooltipThreshold &&
+        (!lastZoom || lastZoom < tooltipThreshold)
+      ) {
+        map.getPane('tooltipPane').style.display = 'block';
+      }
+      this.setState({ lastZoom: zoom });
+    });
 
     // set our state to include the tile layer
     this.setState({ map, tileLayer });
