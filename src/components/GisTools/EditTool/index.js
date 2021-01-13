@@ -65,6 +65,8 @@ import {
 import MouseTooltip from 'react-sticky-mouse-tooltip';
 import { current } from '@reduxjs/toolkit';
 
+import DialogGroup from './DialogGroup';
+
 const useStyles = makeStyles(theme => ({
   editGroup: {
     position: 'absolute',
@@ -593,132 +595,7 @@ const EditTool = props => {
       )}
 
       {/* Dialog agrupar en multipartes */}
-      {group.openDialog && (
-        <Dialog open={group.openDialog} onClose={handleCloseGroup}>
-          <DialogTitle disableTypography>
-            <Typography variant="h4">
-              ¿Desea combinar los objetos seleccionados?
-            </Typography>
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              <Table className={classes.table} aria-label="caption table">
-                <caption>Luego se podrán cambiar las propiedades</caption>
-                <TableBody>
-                  <TableRow>
-                    <TableCell variant="head">Crop</TableCell>
-                    <TableCell align="right">
-                      Corn{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      Corn
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell variant="head">Field</TableCell>
-                    <TableCell align="right">
-                      Land 19{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      L 20{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell variant="head">Hybrid/Variety</TableCell>
-                    <TableCell align="right">
-                      -Not assigned-{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      -Not assigned-{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell variant="head">Seeding date</TableCell>
-                    <TableCell align="right">
-                      2019-12-19{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      2019-12-20{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell variant="head">Surface (has)</TableCell>
-                    <TableCell align="right">
-                      35.4227003{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      31.648056{' '}
-                      <Radio
-                        value="a"
-                        name="radio-button-demo"
-                        inputProps={{ 'aria-label': 'A' }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseGroup} color="default">
-              Cancelar
-            </Button>
-            <Button
-              onClick={confirmGroup}
-              color="primary"
-              variant="contained"
-              autoFocus
-            >
-              Ok
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+      {group.openDialog && <DialogGroup />}
 
       {/* Interfaz edit tools */}
       <Box className={classes.editGroup}>

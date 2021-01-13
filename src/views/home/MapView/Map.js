@@ -12,7 +12,7 @@ import lotes from 'src/data/Fields.json';
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
-import EditTool from 'src/components/GisTools/EditTool';
+import EditTool from 'src/components/GisTools/EditTool/index';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 import * as turf from '@turf/turf';
