@@ -12,7 +12,7 @@ import lotes from 'src/data/Fields.json';
 import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
-import EditTool from 'src/components/GisTools/EditTool/index';
+import EditTool from 'src/components/GisTools/EditTool';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 import * as turf from '@turf/turf';
@@ -155,20 +155,21 @@ class Map extends Component {
   }
 
   updateVectorLayer(data) {
-    if (Array.isArray(data)) {
-      data.forEach(element => {
-        let found = this.state.vectorLayers.find(e => e.name === element.type);
-        if (element.id !== null)
-          found.layer.removeLayer(found.layer.getLayer(element.id));
+    data.forEach(element => {
+      let found = this.state.vectorLayers.find(e => e.name === element.type);
+      if (element.operation === 'create') {
         found.layer.addData(element.geojson);
-      });
-      return;
-    }
+      }
 
-    let found = this.state.vectorLayers.find(e => e.name === data.type);
-    if (data.id !== null)
-      found.layer.removeLayer(found.layer.getLayer(data.id));
-    found.layer.addData(data.geojson);
+      if (element.operation === 'update') {
+        found.layer.removeLayer(found.layer.getLayer(element.id));
+        found.layer.addData(element.geojson);
+      }
+
+      if (element.operation === 'remove') {
+        found.layer.removeLayer(found.layer.getLayer(element.id));
+      }
+    });
   }
 
   zoomToFeature(target) {

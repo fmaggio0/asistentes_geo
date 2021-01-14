@@ -65,8 +65,6 @@ import {
 import MouseTooltip from 'react-sticky-mouse-tooltip';
 import { current } from '@reduxjs/toolkit';
 
-import DialogGroup from './DialogGroup';
-
 const useStyles = makeStyles(theme => ({
   editGroup: {
     position: 'absolute',
@@ -121,17 +119,18 @@ const EditTool = props => {
   );
   const [editableLayer, setEditableLayer] = useState(null);
   const [editLayerProperties, setEditLayerProperties] = useState(null);
-  const [ungroupLayer, setUngroupLayer] = useState(null);
-  const [groupLayer, setGroupLayer] = useState(null);
   const mapContext = useContext(MapContext);
   const { editLayer, contextLayer } = props;
-  const [ungroupOpen, setUngroupOpen] = useState(false);
-  const [groupOpen, setGroupOpen] = useState(false);
 
   const [group, setGroup] = useState({
     openDialog: false,
     selectLayers: [],
-    allProperties: [],
+    buttonToggle: false
+  });
+
+  const [ungroup, setUngroup] = useState({
+    openDialog: false,
+    selectLayers: [],
     buttonToggle: false
   });
 
@@ -154,14 +153,18 @@ const EditTool = props => {
   };
 
   const handleCloseUngroup = () => {
-    setUngroupOpen(false);
+    setUngroup({ openDialog: false });
   };
 
   /*useEffect(() => {
     if (editableLayer) {
       console.log(editableLayer.toGeoJSON());
     }
-  }, [editableLayer]);*/
+
+    if (contextLayer) {
+      console.log(contextLayer.toGeoJSON());
+    }
+  }, [editableLayer, contextLayer]);*/
 
   const drawPolygon = () => {
     let geom = mapContext.state.map.editTools.startPolygon();
@@ -237,7 +240,6 @@ const EditTool = props => {
   };
 
   const undoGeometry = e => {
-    console.log('entro undo');
     if (geomtryHistory.length > 1) {
       setGeomtryHistory(
         geomtryHistory.filter((_, i) => i !== geomtryHistory.length - 1)
@@ -314,6 +316,9 @@ const EditTool = props => {
 
   const unGroupObject = e => {
     mapContext.cursorOnMap('pointer');
+    setUngroup({
+      buttonToggle: true
+    });
     setMouseTooltip({
       isActive: true,
       text: 'Elegir una o mas partes de un objeto para desagrupar.'
@@ -327,28 +332,36 @@ const EditTool = props => {
             isActive: false,
             text: ''
           });
-          setUngroupLayer(currentFeature);
-          setUngroupOpen(true);
+          setUngroup({
+            openDialog: true,
+            buttonToggle: false,
+            selectLayers: currentFeature
+          });
         }
       });
     });
   };
 
   const confirmUngroup = () => {
-    let editLayerLessDiff = difference(editLayer.toGeoJSON(), ungroupLayer);
+    let editLayerLessDiff = difference(
+      editLayer.toGeoJSON(),
+      ungroup.selectLayers
+    );
     editLayerLessDiff.properties = editLayerProperties;
-    ungroupLayer.properties = editLayerProperties;
+    ungroup.selectLayers.properties = editLayerProperties;
 
     props.result([
       {
         id: editLayer._leaflet_id,
         type: 'lotes',
-        geojson: editLayerLessDiff
+        geojson: editLayerLessDiff,
+        operation: 'update'
       },
       {
         id: null,
         type: 'lotes',
-        geojson: ungroupLayer
+        geojson: ungroup.selectLayers,
+        operation: 'create'
       }
     ]);
 
@@ -366,51 +379,38 @@ const EditTool = props => {
       text: 'Elija uno o mas objetos para agrupar.'
     });
     contextLayer.once('click', function(e) {
-      console.log('context click');
-      let flat = flatten(e.target.toGeoJSON());
-      let point1 = point([e.latlng.lng, e.latlng.lat]);
-      let featuresArray = [];
-      featureEach(flat, function(currentFeature, featureIndex) {
-        if (booleanPointInPolygon(point1, currentFeature)) {
-          featuresArray.push(currentFeature);
-        }
-      });
-
-      console.log(featuresArray.concat(editLayer.toGeoJSON()));
-
       setMouseTooltip({
         isActive: false,
         text: ''
       });
-
       setGroup({
         openDialog: true,
-        selectLayers: featuresArray.concat(editLayer.toGeoJSON()),
-        allProperties: [],
-        buttonToggle: false
+        buttonToggle: false,
+        selectLayers: e.layer
       });
     });
   };
 
   const confirmGroup = () => {
-    console.log(group);
-    alert('ok');
-    /*let editLayerLessDiff = difference(editLayer.toGeoJSON(), ungroupLayer);
-    editLayerLessDiff.properties = editLayerProperties;
-    ungroupLayer.properties = editLayerProperties;
+    let editLayerUnionGroup = union(
+      editLayer.toGeoJSON(),
+      group.selectLayers.toGeoJSON()
+    );
+    editLayerUnionGroup.properties = editLayerProperties;
 
     props.result([
       {
         id: editLayer._leaflet_id,
         type: 'lotes',
-        geojson: editLayerLessDiff
+        geojson: editLayerUnionGroup,
+        operation: 'update'
       },
       {
-        id: null,
+        id: group.selectLayers._leaflet_id,
         type: 'lotes',
-        geojson: ungroupLayer
+        operation: 'remove'
       }
-    ]);*/
+    ]);
 
     handleCloseGroup();
     props.unmountMe();
@@ -419,12 +419,55 @@ const EditTool = props => {
   const saveEditLayer = () => {
     let resultGeoJson = editableLayer.toGeoJSON();
     resultGeoJson.properties = editLayerProperties;
-    props.result({
-      id: editLayer._leaflet_id,
-      type: 'lotes',
-      geojson: resultGeoJson
-    });
+    props.result([
+      {
+        id: editLayer._leaflet_id,
+        type: 'lotes',
+        geojson: resultGeoJson,
+        operation: 'update'
+      }
+    ]);
     props.unmountMe();
+  };
+
+  const RemoveEditLayer = () => {
+    mapContext.cursorOnMap('pointer');
+    /*setGroup({
+      buttonToggle: true
+    });*/
+    setMouseTooltip({
+      isActive: true,
+      text: 'Elija una parte o todo el objeto para eliminar.'
+    });
+    editLayer.once('click', function(e) {
+      setMouseTooltip({
+        isActive: false,
+        text: ''
+      });
+
+      /*let flat = flatten(e.target.toGeoJSON());
+      let point1 = point([e.latlng.lng, e.latlng.lat]);
+      featureEach(flat, function(currentFeature, featureIndex) {
+        if (booleanPointInPolygon(point1, currentFeature)) {
+          setMouseTooltip({
+            isActive: false,
+            text: ''
+          });
+          setUngroup({
+            openDialog: true,
+            buttonToggle: false,
+            selectLayers: currentFeature
+          });
+        }
+      });
+      */
+      /*setGroup({
+        openDialog: true,
+        buttonToggle: false,
+        selectLayers: e.layer
+      });*/
+    });
+    //props.unmountMe();
   };
 
   const setEvents = lay => {
@@ -567,8 +610,8 @@ const EditTool = props => {
       )}
 
       {/* Dialog desagrupar multipartes */}
-      {ungroupOpen && (
-        <Dialog open={ungroupOpen} onClose={handleCloseUngroup}>
+      {ungroup.openDialog && (
+        <Dialog open={ungroup.openDialog} onClose={handleCloseUngroup}>
           <DialogTitle disableTypography>
             <Typography variant="h4">¿Desea desagregar el objeto?</Typography>
           </DialogTitle>
@@ -595,7 +638,33 @@ const EditTool = props => {
       )}
 
       {/* Dialog agrupar en multipartes */}
-      {group.openDialog && <DialogGroup />}
+      {group.openDialog && (
+        <Dialog open={group.openDialog} onClose={handleCloseGroup}>
+          <DialogTitle disableTypography>
+            <Typography variant="h4">
+              ¿Desea combinar los objetos seleccionados?
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              El objeto resultante mantendrá los mismos atributos que el actual.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseGroup} color="default">
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmGroup}
+              color="primary"
+              variant="contained"
+              autoFocus
+            >
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
       {/* Interfaz edit tools */}
       <Box className={classes.editGroup}>
@@ -669,6 +738,7 @@ const EditTool = props => {
                 className={classes.button}
                 onClick={unGroupObject}
                 disabled={flatten(editLayer.toGeoJSON()).features.length <= 1}
+                color={ungroup.buttonToggle ? 'primary' : 'default'}
               >
                 <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
               </Button>
@@ -682,7 +752,7 @@ const EditTool = props => {
             </Button>
           </Tooltip>
           <Tooltip title="Eliminar objeto" arrow>
-            <Button className={classes.button}>
+            <Button className={classes.button} onClick={RemoveEditLayer}>
               <FontAwesomeIcon icon={faTrashAlt} size="lg" />
             </Button>
           </Tooltip>
