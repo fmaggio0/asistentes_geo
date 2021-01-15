@@ -105,7 +105,7 @@ export function geometryCheck(geom) {
     if (turf.area(geom) < 100)
       throw 'La geometria debe tener como minimo 100mts2.';
 
-    console.log(geojsonhint.hint(geom));
+    //console.log(geojsonhint.hint(geom));
 
     return geom;
   } catch (e) {

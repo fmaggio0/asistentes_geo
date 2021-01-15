@@ -1,30 +1,35 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { makeStyles } from '@material-ui/core';
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
-import Divider from '@material-ui/core/Divider';
-import Tooltip from '@material-ui/core/Tooltip';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
-import Dialog from '@material-ui/core/Dialog';
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
-import TableBody from '@material-ui/core/TableBody';
-import TableHead from '@material-ui/core/TableHead';
-import Table from '@material-ui/core/Table';
-import Radio from '@material-ui/core/Radio';
+
+//Material UI components
+import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContentText from '@material-ui/core/DialogContentText';
+import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
+import Tooltip from '@material-ui/core/Tooltip';
+import { makeStyles } from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import Paper from '@material-ui/core/Paper';
+import Box from '@material-ui/core/Box';
+
+//Varios
+import { geometryCheck, cutAll, unionAll, unify } from 'src/utils/functionsGeo';
+import MouseTooltip from 'react-sticky-mouse-tooltip';
+import MapContext from 'src/contexts/MapContext';
+import L from 'leaflet';
+import 'leaflet-geometryutil';
+import 'leaflet-snap';
+import * as turf from '@turf/turf';
+
+//FontAwesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
   faUndo,
   faCut,
-  faMousePointer,
-  faScalpelPath,
-  faPlus
+  faScalpelPath
 } from '@fortawesome/pro-solid-svg-icons';
 import {
   faObjectGroup,
@@ -37,33 +42,6 @@ import {
   faDrawPolygon,
   faSave
 } from '@fortawesome/pro-light-svg-icons';
-import MapContext from 'src/contexts/MapContext';
-import { geometryCheck, cutAll, unionAll, unify } from 'src/utils/functionsGeo';
-import L from 'leaflet';
-import 'leaflet-geometryutil';
-import 'leaflet-snap';
-import {
-  circle,
-  difference,
-  polygonToLine,
-  union,
-  polygonize,
-  booleanPointInPolygon,
-  pointOnFeature,
-  combine,
-  featureEach,
-  flatten,
-  getCoords,
-  getType,
-  polygon,
-  multiPolygon,
-  featureCollection,
-  lineToPolygon,
-  buffer,
-  point
-} from '@turf/turf';
-import MouseTooltip from 'react-sticky-mouse-tooltip';
-import { current } from '@reduxjs/toolkit';
 
 const useStyles = makeStyles(theme => ({
   editGroup: {
@@ -71,13 +49,14 @@ const useStyles = makeStyles(theme => ({
     zIndex: 800,
     left: '50%',
     top: 10,
-    transform: 'translate(-50%, 0%)'
+    transform: 'translate(-50%, 0%)',
+    display: 'inline-flex'
   },
   buttongroup: {
     backgroundColor: theme.palette.background.paper1,
     borderRadius: 4,
-    display: 'inline-flex',
-    marginLeft: 10
+    marginLeft: 10,
+    display: 'inline-flex'
   },
   button: {
     width: 35,
@@ -105,11 +84,17 @@ const useStyles = makeStyles(theme => ({
 const EditTool = props => {
   var useStateRef = require('react-usestateref');
   const classes = useStyles();
-  const [toggleGroup, setToggleGroup] = useState(false);
-  const [activeSquare, setActiveSquare] = useState(false);
-  const [activeCircle, setActiveCircle] = useState(false);
-  const [activePolygon, setActivePolygon] = useState(false);
-  const [activeCut, setActiveCut] = useState(false);
+  const [activeAction, setActiveAction, activeActionRef] = useStateRef({
+    drawSquare: false,
+    drawCircle: false,
+    drawPolygon: false,
+    cutWithLine: false,
+    group: false,
+    ungroup: false,
+    remove: false
+  });
+  const [activeCut, setActiveCut, activeCutRef] = useStateRef(false);
+
   const [mouseTooltip, setMouseTooltip] = useState({
     isActive: false,
     text: ''
@@ -118,120 +103,133 @@ const EditTool = props => {
     []
   );
   const [editableLayer, setEditableLayer] = useState(null);
-  const [editLayerProperties, setEditLayerProperties] = useState(null);
+  const [editLayerInfo, setEditLayerInfo] = useState({
+    properties: null,
+    length: null
+  });
+  const [helperGeom, setHelperGeom] = useState({ layer: null, type: '' });
   const mapContext = useContext(MapContext);
   const { editLayer, contextLayer } = props;
 
   const [group, setGroup] = useState({
     openDialog: false,
-    selectLayers: [],
-    buttonToggle: false
+    selectLayers: []
   });
 
   const [ungroup, setUngroup] = useState({
     openDialog: false,
-    selectLayers: [],
-    buttonToggle: false
+    selectLayers: []
+  });
+
+  const [remove, setRemove] = useState({
+    openDialog: false,
+    selectLayers: []
   });
 
   useEffect(() => {
     setLayer(editLayer.toGeoJSON());
-    setEditLayerProperties(editLayer.toGeoJSON().properties);
+    setEditLayerInfo({
+      properties: editLayer.toGeoJSON().properties,
+      length: turf.flatten(editLayer.toGeoJSON()).features.length
+    });
+
     return () => {
       mapContext.state.map.editTools.featuresLayer.clearLayers();
+      mapContext.state.map.editTools.stopDrawing();
       mapContext.cursorOnMap();
     };
   }, []);
 
   /*useEffect(() => {
-    //console.log(geomtryHistory);
-    console.log();
-  }, [editLayer]);*/
+    console.log(geomtryHistory);
+  }, [geomtryHistory]);*/
 
-  const handleCloseGroup = () => {
-    setGroup({ openDialog: false });
+  const toggleActiveCut = () => {
+    toggleActiveAction();
+    setActiveCut(!activeCut);
   };
 
-  const handleCloseUngroup = () => {
-    setUngroup({ openDialog: false });
-  };
-
-  /*useEffect(() => {
-    if (editableLayer) {
-      console.log(editableLayer.toGeoJSON());
-    }
-
-    if (contextLayer) {
-      console.log(contextLayer.toGeoJSON());
-    }
-  }, [editableLayer, contextLayer]);*/
-
-  const drawPolygon = () => {
-    let geom = mapContext.state.map.editTools.startPolygon();
-    setActiveSquare(false);
-    setActiveCircle(false);
-    setActivePolygon(true);
-
-    geom.on('editable:drawing:end', function(end) {
-      if (end.layer._map) {
-        try {
-          let defaultGeom = [...geomtryHistory].pop();
-          let drawGeom = end.layer.toGeoJSON();
-          drawProcess(drawGeom, defaultGeom);
-        } catch (e) {
-          console.log(e);
-          errorGeometry();
-        }
-        setActivePolygon(false);
-      }
+  const toggleActiveAction = action => {
+    //Disable events
+    setMouseTooltip({
+      isActive: false,
+      text: ''
     });
+    editableLayer.off('click');
+
+    let stateCopy = { ...activeAction };
+    Object.keys(stateCopy).forEach(key => {
+      stateCopy[key] = false;
+    });
+    if (action) stateCopy[action] = true;
+    if (
+      activeCut &&
+      !['drawSquare', 'drawPolygon', 'drawCircle'].includes(action)
+    )
+      setActiveCut(false);
+    setActiveAction(stateCopy);
   };
+
+  useEffect(() => {
+    if (helperGeom.layer) {
+      helperGeom.layer.on('editable:drawing:end', function(end) {
+        if (end.layer._map) {
+          try {
+            let lastGeom = [...geomtryHistory].pop();
+            let drawGeom = end.layer.toGeoJSON();
+
+            if (
+              helperGeom.type === 'drawSquare' ||
+              helperGeom.type === 'drawPolygon'
+            ) {
+              drawProcess(drawGeom, lastGeom);
+            } else if (helperGeom.type === 'drawCircle') {
+              let center = drawGeom.geometry.coordinates;
+              let radius = end.layer._mRadius;
+              let circlePolygon = turf.circle(center, radius, {
+                steps: 30,
+                units: 'meters'
+              });
+              drawProcess(circlePolygon, lastGeom);
+            } else if (helperGeom.type === 'cutWithLine') {
+              let LinePolygon = turf.buffer(drawGeom, 1, {
+                units: 'meters'
+              });
+              let clipped = turf.difference(lastGeom, LinePolygon);
+              setLayer(clipped);
+              toggleActiveAction();
+            }
+          } catch (e) {
+            console.log(e);
+            errorGeometry();
+          }
+        }
+      });
+    }
+  }, [helperGeom]);
 
   const drawSquare = () => {
-    let geom = mapContext.state.map.editTools.startRectangle();
-    setActiveSquare(true);
-    setActiveCircle(false);
-    setActivePolygon(false);
-
-    geom.on('editable:drawing:end', function(end) {
-      if (end.layer._map) {
-        try {
-          let defaultGeom = [...geomtryHistory].pop();
-          let drawGeom = end.layer.toGeoJSON();
-          drawProcess(drawGeom, defaultGeom);
-        } catch (e) {
-          console.log(e);
-          errorGeometry();
-        }
-        setActiveSquare(false);
-      }
+    setHelperGeom({
+      layer: mapContext.state.map.editTools.startRectangle(),
+      type: 'drawSquare'
     });
+    toggleActiveAction('drawSquare');
   };
 
   const drawCircle = () => {
-    var geom = mapContext.state.map.editTools.startCircle();
-    setActiveSquare(false);
-    setActiveCircle(true);
-    setActivePolygon(false);
-
-    geom.on('editable:drawing:end', function(end) {
-      if (end.layer._map) {
-        try {
-          let defaultGeom = [...geomtryHistory].pop();
-          let center = end.layer.toGeoJSON().geometry.coordinates;
-          let radius = end.layer._mRadius;
-          let drawGeom = circle(center, radius, {
-            steps: 30,
-            units: 'meters'
-          });
-          drawProcess(drawGeom, defaultGeom);
-        } catch (e) {
-          console.log(e);
-          errorGeometry();
-        }
-        setActiveCircle(false);
-      }
+    setHelperGeom({
+      layer: mapContext.state.map.editTools.startCircle(),
+      type: 'drawCircle'
     });
+    toggleActiveAction('drawCircle');
+  };
+
+  const drawPolygon = () => {
+    setHelperGeom({
+      layer: mapContext.state.map.editTools.startPolygon(),
+      type: 'drawPolygon'
+    });
+    toggleActiveAction('drawPolygon');
   };
 
   const errorGeometry = () => {
@@ -240,6 +238,7 @@ const EditTool = props => {
   };
 
   const undoGeometry = e => {
+    toggleActiveAction();
     if (geomtryHistory.length > 1) {
       setGeomtryHistory(
         geomtryHistory.filter((_, i) => i !== geomtryHistory.length - 1)
@@ -253,10 +252,10 @@ const EditTool = props => {
     let drawGeometryChecked = geometryCheck(drawGeom);
     let process;
 
-    if (activeCut === true) {
+    if (activeCutRef.current === true) {
       process = cutAll(drawGeometryChecked, defaultGeom);
       if (!process) {
-        setActiveCut(false);
+        //toggleActiveAction();
         return;
       }
     } else {
@@ -266,20 +265,24 @@ const EditTool = props => {
     let geometryWithoutIntersections = checkForIntersections(process);
     let resultGeometryChecked = geometryCheck(geometryWithoutIntersections);
 
+    toggleActiveAction();
+
     setLayer(resultGeometryChecked);
   };
 
   const checkForIntersections = drawGeom => {
-    let diff;
+    /*let diff;
     //Revisar diferencia con otros lotes
-    let combined = combine(contextLayer.toGeoJSON());
-    let contextWithoutEditLayer = difference(
+    let combined = turf.combine(contextLayer.toGeoJSON());
+    let contextWithoutEditLayer = turf.difference(
       combined.features[0],
       editLayer.toGeoJSON()
     );
-    diff = difference(drawGeom, contextWithoutEditLayer);
+    diff = turf.difference(drawGeom, contextWithoutEditLayer);
 
-    return diff;
+    return diff;*/
+
+    return drawGeom;
   };
 
   const setLayer = (geoj, error = false) => {
@@ -293,62 +296,42 @@ const EditTool = props => {
   };
 
   const cutWithLine = e => {
-    var geom = mapContext.state.map.editTools.startPolyline();
-
-    geom.on('editable:drawing:end', function(end) {
-      if (end.layer._map) {
-        try {
-          const poly = [...geomtryHistory].pop();
-          const line = end.layer.toGeoJSON();
-          const LinePolygon = buffer(line, 1, {
-            units: 'meters'
-          });
-          const clipped = difference(poly, LinePolygon);
-
-          setLayer(clipped);
-        } catch (e) {
-          console.log(e);
-          errorGeometry();
-        }
-      }
+    setHelperGeom({
+      layer: mapContext.state.map.editTools.startPolyline(),
+      type: 'cutWithLine'
     });
+    toggleActiveAction('cutWithLine');
   };
 
   const unGroupObject = e => {
     mapContext.cursorOnMap('pointer');
-    setUngroup({
-      buttonToggle: true
-    });
+    toggleActiveAction('ungroup');
     setMouseTooltip({
       isActive: true,
       text: 'Elegir una o mas partes de un objeto para desagrupar.'
     });
     editableLayer.once('click', function(e) {
-      let flat = flatten(e.target.toGeoJSON());
-      let point1 = point([e.latlng.lng, e.latlng.lat]);
-      featureEach(flat, function(currentFeature, featureIndex) {
-        if (booleanPointInPolygon(point1, currentFeature)) {
-          setMouseTooltip({
-            isActive: false,
-            text: ''
-          });
+      let flat = turf.flatten(e.target.toGeoJSON());
+      let point1 = turf.point([e.latlng.lng, e.latlng.lat]);
+      turf.featureEach(flat, function(currentFeature, featureIndex) {
+        if (turf.booleanPointInPolygon(point1, currentFeature)) {
           setUngroup({
             openDialog: true,
-            buttonToggle: false,
             selectLayers: currentFeature
           });
         }
       });
+      toggleActiveAction();
     });
   };
 
   const confirmUngroup = () => {
-    let editLayerLessDiff = difference(
+    let editLayerLessDiff = turf.difference(
       editLayer.toGeoJSON(),
       ungroup.selectLayers
     );
-    editLayerLessDiff.properties = editLayerProperties;
-    ungroup.selectLayers.properties = editLayerProperties;
+    editLayerLessDiff.properties = editLayerInfo.properties;
+    ungroup.selectLayers.properties = editLayerInfo.properties;
 
     props.result([
       {
@@ -365,38 +348,32 @@ const EditTool = props => {
       }
     ]);
 
-    handleCloseUngroup();
+    setUngroup({ openDialog: false });
     props.unmountMe();
   };
 
   const groupObject = e => {
     mapContext.cursorOnMap('pointer');
-    setGroup({
-      buttonToggle: true
-    });
+    toggleActiveAction('group');
     setMouseTooltip({
       isActive: true,
       text: 'Elija uno o mas objetos para agrupar.'
     });
     contextLayer.once('click', function(e) {
-      setMouseTooltip({
-        isActive: false,
-        text: ''
-      });
       setGroup({
         openDialog: true,
-        buttonToggle: false,
         selectLayers: e.layer
       });
+      toggleActiveAction();
     });
   };
 
   const confirmGroup = () => {
-    let editLayerUnionGroup = union(
+    let editLayerUnionGroup = turf.union(
       editLayer.toGeoJSON(),
       group.selectLayers.toGeoJSON()
     );
-    editLayerUnionGroup.properties = editLayerProperties;
+    editLayerUnionGroup.properties = editLayerInfo.properties;
 
     props.result([
       {
@@ -412,13 +389,13 @@ const EditTool = props => {
       }
     ]);
 
-    handleCloseGroup();
+    setGroup({ openDialog: false });
     props.unmountMe();
   };
 
   const saveEditLayer = () => {
     let resultGeoJson = editableLayer.toGeoJSON();
-    resultGeoJson.properties = editLayerProperties;
+    resultGeoJson.properties = editLayerInfo.properties;
     props.result([
       {
         id: editLayer._leaflet_id,
@@ -432,42 +409,60 @@ const EditTool = props => {
 
   const RemoveEditLayer = () => {
     mapContext.cursorOnMap('pointer');
-    /*setGroup({
-      buttonToggle: true
-    });*/
+    toggleActiveAction('remove');
     setMouseTooltip({
       isActive: true,
       text: 'Elija una parte o todo el objeto para eliminar.'
     });
-    editLayer.once('click', function(e) {
-      setMouseTooltip({
-        isActive: false,
-        text: ''
-      });
+    editableLayer.once('click', function(e) {
+      let flat = turf.flatten(e.target.toGeoJSON());
+      let point1 = turf.point([e.latlng.lng, e.latlng.lat]);
 
-      /*let flat = flatten(e.target.toGeoJSON());
-      let point1 = point([e.latlng.lng, e.latlng.lat]);
-      featureEach(flat, function(currentFeature, featureIndex) {
-        if (booleanPointInPolygon(point1, currentFeature)) {
-          setMouseTooltip({
-            isActive: false,
-            text: ''
-          });
-          setUngroup({
-            openDialog: true,
-            buttonToggle: false,
-            selectLayers: currentFeature
-          });
-        }
-      });
-      */
-      /*setGroup({
-        openDialog: true,
-        buttonToggle: false,
-        selectLayers: e.layer
-      });*/
+      if (flat.features.length > 1) {
+        turf.featureEach(flat, function(currentFeature, featureIndex) {
+          if (!turf.booleanPointInPolygon(point1, currentFeature)) {
+            setRemove({
+              openDialog: true,
+              selectLayers: currentFeature,
+              operation: 'update'
+            });
+          }
+        });
+      } else {
+        setRemove({
+          openDialog: true,
+          selectLayers: e.layer,
+          operation: 'remove'
+        });
+      }
+      toggleActiveAction();
     });
-    //props.unmountMe();
+  };
+
+  const confirmRemove = () => {
+    if (remove.operation === 'update') {
+      let resultGeoJson = remove.selectLayers;
+      resultGeoJson.properties = editLayerInfo.properties;
+
+      props.result([
+        {
+          id: editLayer._leaflet_id,
+          type: 'lotes',
+          geojson: resultGeoJson,
+          operation: 'update'
+        }
+      ]);
+    } else if (remove.operation === 'remove') {
+      props.result([
+        {
+          id: editLayer._leaflet_id,
+          type: 'lotes',
+          operation: 'remove'
+        }
+      ]);
+    }
+
+    props.unmountMe();
   };
 
   const setEvents = lay => {
@@ -611,7 +606,10 @@ const EditTool = props => {
 
       {/* Dialog desagrupar multipartes */}
       {ungroup.openDialog && (
-        <Dialog open={ungroup.openDialog} onClose={handleCloseUngroup}>
+        <Dialog
+          open={ungroup.openDialog}
+          onClose={() => setUngroup({ openDialog: false })}
+        >
           <DialogTitle disableTypography>
             <Typography variant="h4">¿Desea desagregar el objeto?</Typography>
           </DialogTitle>
@@ -622,7 +620,10 @@ const EditTool = props => {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseUngroup} color="default">
+            <Button
+              onClick={() => setUngroup({ openDialog: false })}
+              color="default"
+            >
               Cancelar
             </Button>
             <Button
@@ -639,7 +640,10 @@ const EditTool = props => {
 
       {/* Dialog agrupar en multipartes */}
       {group.openDialog && (
-        <Dialog open={group.openDialog} onClose={handleCloseGroup}>
+        <Dialog
+          open={group.openDialog}
+          onClose={() => setGroup({ openDialog: false })}
+        >
           <DialogTitle disableTypography>
             <Typography variant="h4">
               ¿Desea combinar los objetos seleccionados?
@@ -651,11 +655,47 @@ const EditTool = props => {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseGroup} color="default">
+            <Button
+              onClick={() => setGroup({ openDialog: false })}
+              color="default"
+            >
               Cancelar
             </Button>
             <Button
               onClick={confirmGroup}
+              color="primary"
+              variant="contained"
+              autoFocus
+            >
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Remover parte o todo */}
+      {remove.openDialog && (
+        <Dialog
+          open={remove.openDialog}
+          onClose={() => setRemove({ openDialog: false })}
+        >
+          <DialogTitle disableTypography>
+            <Typography variant="h4">¿Desea eliminar el objeto?</Typography>
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              El objeto ya no estará disponible.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setRemove({ openDialog: false })}
+              color="default"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmRemove}
               color="primary"
               variant="contained"
               autoFocus
@@ -673,7 +713,7 @@ const EditTool = props => {
             <Button
               className={classes.button}
               onClick={drawSquare}
-              color={activeSquare ? 'primary' : 'default'}
+              color={activeAction.drawSquare ? 'primary' : 'default'}
             >
               <FontAwesomeIcon icon={faDrawSquare} size="lg" />
             </Button>
@@ -682,7 +722,7 @@ const EditTool = props => {
             <Button
               className={classes.button}
               onClick={drawCircle}
-              color={activeCircle ? 'primary' : 'default'}
+              color={activeAction.drawCircle ? 'primary' : 'default'}
             >
               <FontAwesomeIcon icon={faDrawCircle} size="lg" />
             </Button>
@@ -691,7 +731,7 @@ const EditTool = props => {
             <Button
               className={classes.button}
               onClick={drawPolygon}
-              color={activePolygon ? 'primary' : 'default'}
+              color={activeAction.drawPolygon ? 'primary' : 'default'}
             >
               <FontAwesomeIcon icon={faDrawPolygon} size="lg" />
             </Button>
@@ -710,7 +750,7 @@ const EditTool = props => {
           <Tooltip title="Activar corte" arrow>
             <Button
               className={classes.button}
-              onClick={() => setActiveCut(!activeCut)}
+              onClick={toggleActiveCut}
               color={activeCut ? 'primary' : 'default'}
             >
               <FontAwesomeIcon icon={faCut} size="lg" />
@@ -719,26 +759,33 @@ const EditTool = props => {
         </Box>
         <Box className={classes.buttongroup}>
           <Tooltip title="Dividir objeto" arrow>
-            <Button className={classes.button} onClick={cutWithLine}>
+            <Button
+              className={classes.button}
+              onClick={cutWithLine}
+              color={activeAction.cutWithLine ? 'primary' : 'default'}
+            >
               <FontAwesomeIcon icon={faScalpelPath} size="lg" />
             </Button>
           </Tooltip>
           <Tooltip title="Agrupar objectos en multiparte" arrow>
-            <Button
-              className={classes.button}
-              onClick={groupObject}
-              color={group.buttonToggle ? 'primary' : 'default'}
-            >
-              <FontAwesomeIcon icon={faObjectGroup} size="lg" />
-            </Button>
+            <div>
+              <Button
+                className={classes.button}
+                onClick={groupObject}
+                color={activeAction.group ? 'primary' : 'default'}
+                disabled={contextLayer.toGeoJSON().features.length <= 1}
+              >
+                <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+              </Button>
+            </div>
           </Tooltip>
           <Tooltip title="Desagrupar objecto multiparte" arrow>
             <div>
               <Button
                 className={classes.button}
                 onClick={unGroupObject}
-                disabled={flatten(editLayer.toGeoJSON()).features.length <= 1}
-                color={ungroup.buttonToggle ? 'primary' : 'default'}
+                disabled={editLayerInfo.length <= 1}
+                color={activeAction.ungroup ? 'primary' : 'default'}
               >
                 <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
               </Button>
@@ -747,12 +794,22 @@ const EditTool = props => {
         </Box>
         <Box className={classes.buttongroup}>
           <Tooltip title="Volver atras" arrow>
-            <Button className={classes.button} onClick={undoGeometry}>
-              <FontAwesomeIcon icon={faUndo} size="lg" />
-            </Button>
+            <div>
+              <Button
+                className={classes.button}
+                onClick={undoGeometry}
+                disabled={geomtryHistory.length <= 1}
+              >
+                <FontAwesomeIcon icon={faUndo} size="lg" />
+              </Button>
+            </div>
           </Tooltip>
           <Tooltip title="Eliminar objeto" arrow>
-            <Button className={classes.button} onClick={RemoveEditLayer}>
+            <Button
+              className={classes.button}
+              onClick={RemoveEditLayer}
+              color={activeAction.remove ? 'primary' : 'default'}
+            >
               <FontAwesomeIcon icon={faTrashAlt} size="lg" />
             </Button>
           </Tooltip>
