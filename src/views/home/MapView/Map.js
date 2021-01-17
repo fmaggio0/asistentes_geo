@@ -13,6 +13,7 @@ import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAct
 import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
 import EditTool from 'src/components/GisTools/EditTool';
+import RightPanel from 'src/components/RightPanel/index';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
 import * as turf from '@turf/turf';
@@ -102,7 +103,7 @@ class Map extends Component {
     // check to see if geojson is stored, map is created, and geojson overlay needs to be added
     if (this.state.geojson && this.state.map && !this.state.geojsonLayer) {
       // add the geojson overlay
-      this.addGeoJSONLayer(this.state.geojson);
+      this.addGeoJSONLayer(this.state.geojson, 'lotes');
     }
   }
 
@@ -126,7 +127,7 @@ class Map extends Component {
     else this.setState({ cursor: null });
   }
 
-  addGeoJSONLayer(geojson) {
+  addGeoJSONLayer(geojson, groupName) {
     // create a native Leaflet GeoJSON SVG Layer to add as an interactive overlay to the map
     // an options object is passed to define functions for customizing the layer
     const geojsonLayer = L.geoJson(geojson, {
@@ -140,7 +141,7 @@ class Map extends Component {
 
     //lotes
     let layer = {
-      name: 'lotes',
+      name: groupName,
       layer: geojsonLayer
     };
 
@@ -177,12 +178,14 @@ class Map extends Component {
     this.state.map.fitBounds(target.getBounds());
   }
 
-  onEachFeature(feature, layer) {
+  onEachFeature(feature, layer, groupName) {
+    //console.log(groupName);
     layer.on('click', e => {
       if (this.state.editSelected !== true) this.select(e.target);
     });
 
     //Solo para lotes
+    //if (groupName) {
     layer
       .bindTooltip(
         feature.properties.Field + ' <br> ' + feature.properties.Crop,
@@ -192,6 +195,7 @@ class Map extends Component {
         }
       )
       .openTooltip();
+    //}
   }
 
   highlight(layer) {
@@ -279,22 +283,9 @@ class Map extends Component {
     return (
       <div id="mapUI">
         <MapProvider value={this}>
-          <ButtonActionAmbientes />
+          <RightPanel />
           <MeasureTool />
           <CoordinatesTool />
-
-          {this.state.editSelected && (
-            <EditTool
-              editLayer={this.state.selected}
-              contextLayer={
-                this.state.vectorLayers.find(
-                  element => element.name === 'lotes'
-                ).layer
-              }
-              result={this.updateVectorLayer}
-              unmountMe={this.handleEditTools}
-            />
-          )}
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}

@@ -15,7 +15,13 @@ import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 
 //Varios
-import { geometryCheck, cutAll, unionAll, unify } from 'src/utils/functionsGeo';
+import {
+  geometryCheck,
+  cutAll,
+  unionAll,
+  unify,
+  checkForIntersections
+} from 'src/utils/functionsGeo';
 import MouseTooltip from 'react-sticky-mouse-tooltip';
 import MapContext from 'src/contexts/MapContext';
 import L from 'leaflet';
@@ -94,7 +100,6 @@ const EditTool = props => {
     remove: false
   });
   const [activeCut, setActiveCut, activeCutRef] = useStateRef(false);
-
   const [mouseTooltip, setMouseTooltip] = useState({
     isActive: false,
     text: ''
@@ -108,30 +113,39 @@ const EditTool = props => {
     length: null
   });
   const [helperGeom, setHelperGeom] = useState({ layer: null, type: '' });
-  const mapContext = useContext(MapContext);
-  const { editLayer, contextLayer } = props;
-
+  const [
+    contextLayerLessEditLayer,
+    setContextLayerLessEditLayer,
+    contextLayerLessEditLayerRef
+  ] = useStateRef(null);
   const [group, setGroup] = useState({
     openDialog: false,
     selectLayers: []
   });
-
   const [ungroup, setUngroup] = useState({
     openDialog: false,
     selectLayers: []
   });
-
   const [remove, setRemove] = useState({
     openDialog: false,
     selectLayers: []
   });
+  const mapContext = useContext(MapContext);
+  const { editLayer, contextLayer } = props;
 
   useEffect(() => {
-    setLayer(editLayer.toGeoJSON());
+    if (contextLayer.hasLayer(editLayer)) {
+      var diff = contextLayer.removeLayer(editLayer).toGeoJSON();
+      setContextLayerLessEditLayer(diff);
+      contextLayer.addLayer(editLayer);
+    }
+
     setEditLayerInfo({
       properties: editLayer.toGeoJSON().properties,
       length: turf.flatten(editLayer.toGeoJSON()).features.length
     });
+
+    setLayer(editLayer.toGeoJSON());
 
     return () => {
       mapContext.state.map.editTools.featuresLayer.clearLayers();
@@ -232,6 +246,14 @@ const EditTool = props => {
     toggleActiveAction('drawPolygon');
   };
 
+  const cutWithLine = e => {
+    setHelperGeom({
+      layer: mapContext.state.map.editTools.startPolyline(),
+      type: 'cutWithLine'
+    });
+    toggleActiveAction('cutWithLine');
+  };
+
   const errorGeometry = () => {
     let lastChange = [...geomtryHistoryRef.current].pop();
     if (lastChange) setLayer(lastChange, true);
@@ -262,45 +284,15 @@ const EditTool = props => {
       process = unionAll(drawGeometryChecked, defaultGeom);
     }
 
-    let geometryWithoutIntersections = checkForIntersections(process);
+    let geometryWithoutIntersections = checkForIntersections(
+      process,
+      contextLayerLessEditLayerRef.current
+    );
     let resultGeometryChecked = geometryCheck(geometryWithoutIntersections);
 
     toggleActiveAction();
 
     setLayer(resultGeometryChecked);
-  };
-
-  const checkForIntersections = drawGeom => {
-    /*let diff;
-    //Revisar diferencia con otros lotes
-    let combined = turf.combine(contextLayer.toGeoJSON());
-    let contextWithoutEditLayer = turf.difference(
-      combined.features[0],
-      editLayer.toGeoJSON()
-    );
-    diff = turf.difference(drawGeom, contextWithoutEditLayer);
-
-    return diff;*/
-
-    return drawGeom;
-  };
-
-  const setLayer = (geoj, error = false) => {
-    if (error === false) setGeomtryHistory(oldArray => [...oldArray, geoj]);
-    mapContext.state.map.editTools.featuresLayer.clearLayers();
-    let lay = L.GeoJSON.geometryToLayer(geoj);
-    mapContext.state.map.editTools.featuresLayer.addLayer(lay);
-    lay.enableEdit();
-    setEditableLayer(lay);
-    setEvents(lay);
-  };
-
-  const cutWithLine = e => {
-    setHelperGeom({
-      layer: mapContext.state.map.editTools.startPolyline(),
-      type: 'cutWithLine'
-    });
-    toggleActiveAction('cutWithLine');
   };
 
   const unGroupObject = e => {
@@ -417,25 +409,26 @@ const EditTool = props => {
     editableLayer.once('click', function(e) {
       let flat = turf.flatten(e.target.toGeoJSON());
       let point1 = turf.point([e.latlng.lng, e.latlng.lat]);
-
+      toggleActiveAction();
       if (flat.features.length > 1) {
         turf.featureEach(flat, function(currentFeature, featureIndex) {
-          if (!turf.booleanPointInPolygon(point1, currentFeature)) {
+          if (turf.booleanPointInPolygon(point1, currentFeature)) {
+            let diff = turf.difference(e.target.toGeoJSON(), currentFeature);
             setRemove({
               openDialog: true,
-              selectLayers: currentFeature,
+              selectLayers: diff,
               operation: 'update'
             });
+            return;
           }
         });
       } else {
         setRemove({
           openDialog: true,
-          selectLayers: e.layer,
+          selectLayers: null,
           operation: 'remove'
         });
       }
-      toggleActiveAction();
     });
   };
 
@@ -465,6 +458,16 @@ const EditTool = props => {
     props.unmountMe();
   };
 
+  const setLayer = (geoj, error = false) => {
+    if (error === false) setGeomtryHistory(oldArray => [...oldArray, geoj]);
+    mapContext.state.map.editTools.featuresLayer.clearLayers();
+    let lay = L.GeoJSON.geometryToLayer(geoj);
+    mapContext.state.map.editTools.featuresLayer.addLayer(lay);
+    lay.enableEdit();
+    setEditableLayer(lay);
+    setEvents(lay);
+  };
+
   const setEvents = lay => {
     let snapGuideLayer;
 
@@ -488,20 +491,21 @@ const EditTool = props => {
       snap.enable();
     }
 
-    //Verificar punto que queda cuando se guarda geom (relacionado a snap)
-    /*if (!lay.listens('editable:disable')) {
+    if (!lay.listens('editable:disable')) {
       lay.on('editable:disable', function(dragend) {
-        console.log('snap.disable');
         snap.disable();
       });
-    }*/
+    }
 
     if (!lay.listens('editable:vertex:dragend')) {
       lay.on('editable:vertex:dragend', function(dragend) {
         try {
           let geoj = unify(dragend.layer.toGeoJSON());
           geoj = geometryCheck(geoj);
-          geoj = checkForIntersections(geoj);
+          geoj = checkForIntersections(
+            geoj,
+            contextLayerLessEditLayerRef.current
+          );
           geoj = geometryCheck(geoj);
           setLayer(geoj);
         } catch (e) {
@@ -516,7 +520,10 @@ const EditTool = props => {
         try {
           let geoj = unify(dragend.layer.toGeoJSON());
           geoj = geometryCheck(geoj);
-          geoj = checkForIntersections(geoj);
+          geoj = checkForIntersections(
+            geoj,
+            contextLayerLessEditLayerRef.current
+          );
           geoj = geometryCheck(geoj);
           setLayer(geoj);
         } catch (e) {
@@ -551,8 +558,8 @@ const EditTool = props => {
 
     if (!mapContext.state.map.listens('editable:drawing:end')) {
       mapContext.state.map.on('editable:drawing:end', function(e) {
-        this.off('mousemove', followMouse);
         snapMarker.remove();
+        this.off('mousemove', followMouse);
       });
     }
 

@@ -29,7 +29,7 @@ const baseLayers = [
 
 export default props => {
   const [baseLayer, setBaseLayer] = useState([]);
-  const [selectedBaseLayer, setSelectedBaseLayer] = useState([]);
+  const [selectedBaseLayer, setSelectedBaseLayer] = useState('');
   const mapContext = useContext(MapContext);
   const { capabase } = props;
 
@@ -53,12 +53,15 @@ export default props => {
 
   useEffect(() => {
     //Axios api call para traer geometrias de la capa base
-    if (selectedBaseLayer > 0 && mapContext.state.map.baseLayer === null) {
-      var capabase = new L.GeoJSON(dataCapaBase, {
+    console.log(selectedBaseLayer);
+    if (selectedBaseLayer) {
+      console.log('entro');
+      mapContext.addGeoJSONLayer(dataCapaBase, 'ambientes_capa_base');
+      /*var capabase = new L.GeoJSON(dataCapaBase, {
         onEachFeature: onEachFeature
       });
       capabase.addTo(mapContext.state.map);
-      mapContext.state.map.baseLayer = capabase;
+      mapContext.state.map.baseLayer = capabase;*/
     }
     // eslint-disable-next-line
   }, [selectedBaseLayer]);

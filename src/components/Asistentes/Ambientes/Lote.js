@@ -6,6 +6,8 @@ import Icon from '@material-ui/core/Icon';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import MapContext from '../../../contexts/MapContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/pro-light-svg-icons';
 
 const useStyles = makeStyles(theme360 => ({
   selectLayerButton: {
@@ -30,16 +32,11 @@ export default props => {
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
-    //Mejorar...
-    if (mapContext.state.map) {
-      mapContext.state.map.on('click', function(e) {
-        if (e.target.selectedLayer) {
-          setSelectLayerName(e.target.selectedLayer.feature.properties.Field);
-          props.onChangeLote(e.target.selectedLayer.feature.properties.Field);
-        }
-      });
+    if (mapContext.state.selected) {
+      setSelectLayerName(mapContext.state.selected.feature.properties.Field);
+      props.onChangeLote(mapContext.state.selected.feature.properties.Field);
     }
-  }, [mapContext.state.map]);
+  }, [mapContext.state.selected]);
 
   return (
     <div>
@@ -51,12 +48,9 @@ export default props => {
 
       <Box component="div" className={classes.boxSelect}>
         <IconButton className={classes.iconButton} aria-label="menu">
-          <Icon
-            fontSize="small"
-            style={{ color: '#4A4A49' }}
-            className="fa fa-xs fa-mouse-pointer"
-          />
+          <FontAwesomeIcon icon={faHandPointer} />
         </IconButton>
+
         <TextField
           size="small"
           className={classes.layerName}

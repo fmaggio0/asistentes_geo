@@ -19,6 +19,8 @@ import Icon from '@material-ui/core/Icon';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimesCircle } from '@fortawesome/pro-regular-svg-icons';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -47,7 +49,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default props => {
+const Ambientes = props => {
   const classes = useStyles();
   const [step, setStep] = useState('init');
   const [capa, setCapa] = useState('');
@@ -64,16 +66,6 @@ export default props => {
   const handleClose = () => {
     props.onHandleClose(false);
   };
-
-  useEffect(() => {
-    const node = loadCSS(
-      'https://use.fontawesome.com/releases/v5.12.0/css/all.css',
-      document.querySelector('#font-awesome-css')
-    );
-    return () => {
-      node.parentNode.removeChild(node);
-    };
-  }, []);
 
   const nextStep = () => {
     if (modalidad === 'layer') {
@@ -98,10 +90,9 @@ export default props => {
         }}
         action={
           <IconButton aria-label="settings" onClick={handleClose}>
-            <Icon
-              fontSize="small"
+            <FontAwesomeIcon
+              icon={faTimesCircle}
               style={{ color: '#ffffff' }}
-              className="fa fa-times-circle"
             />
           </IconButton>
         }
@@ -189,3 +180,5 @@ export default props => {
     </Card>
   );
 };
+
+export default Ambientes;

@@ -13,6 +13,8 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPalette, faCircle } from '@fortawesome/pro-solid-svg-icons';
 
 const useStyles = makeStyles(theme => ({
   header: {
@@ -106,7 +108,7 @@ const tiposzona = [
   }
 ];
 
-const iconPalette = <Icon fontSize="small" className="fa fa-palette" />;
+const iconPalette = <FontAwesomeIcon icon={faPalette} />;
 const headers = ['Zona', iconPalette];
 
 export default props => {
@@ -125,11 +127,7 @@ export default props => {
   const setRowsFunction = data => {
     data.forEach(element => {
       let iconColor = (
-        <Icon
-          fontSize="small"
-          style={{ color: element.color }}
-          className="fa fa-circle"
-        />
+        <FontAwesomeIcon icon={faCircle} style={{ color: element.color }} />
       );
       setRows(rows => [...rows, [element.value, iconColor]]);
     });
@@ -150,7 +148,7 @@ export default props => {
         <Typography component="label" variant="subtitle2">
           Tipo de zona
         </Typography>
-        <IconButton aria-label="plus">
+        {/*<IconButton aria-label="plus">
           <Icon
             fontSize="small"
             style={{ color: '#4A4A49' }}
@@ -163,7 +161,7 @@ export default props => {
             style={{ color: '#4A4A49' }}
             className="fa fa-xs fa-pen"
           />
-        </IconButton>
+        </IconButton>*/}
       </Box>
       <Select
         style={{ minWidth: '100%' }}

@@ -178,6 +178,12 @@ export function unify(polyList) {
   return unionTemp;
 }
 
+export function checkForIntersections(drawGeom, contextGeom) {
+  let combined = turf.combine(contextGeom);
+  let diff = turf.difference(drawGeom, combined.features[0]);
+  return diff;
+}
+
 export function polygonCut(polygon, line) {
   const THICK_LINE_UNITS = 'kilometers';
   const THICK_LINE_WIDTH = 0.0001;
