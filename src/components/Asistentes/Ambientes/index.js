@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 /* Componentes */
 import Capa from './Capa';
@@ -10,17 +10,18 @@ import StepCapaBase from './StepCapaBase';
 import StepDrawing from './StepDrawing';
 
 import { makeStyles } from '@material-ui/core/styles';
-import { loadCSS } from 'fg-loadcss';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import IconButton from '@material-ui/core/IconButton';
-import Icon from '@material-ui/core/Icon';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/pro-regular-svg-icons';
+
+//Context
+import MapContext from '../../../contexts/MapContext';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -62,10 +63,14 @@ const Ambientes = props => {
   const handlerCapabase = value => setCapabase(value);
   const [tipoZona, setTipoZona] = useState('');
   const handlerTipoZona = value => setTipoZona(value);
+  const mapContext = useContext(MapContext);
 
-  const handleClose = () => {
-    props.onHandleClose(false);
-  };
+  useEffect(() => {
+    return () => {
+      // unmount
+      mapContext.removeVectorGroup('ambientes_capa_base');
+    };
+  }, []);
 
   const nextStep = () => {
     if (modalidad === 'layer') {
@@ -89,7 +94,7 @@ const Ambientes = props => {
           title: classes.cardHeaderTitle
         }}
         action={
-          <IconButton aria-label="settings" onClick={handleClose}>
+          <IconButton aria-label="settings" onClick={() => props.unmountMe()}>
             <FontAwesomeIcon
               icon={faTimesCircle}
               style={{ color: '#ffffff' }}
@@ -170,6 +175,11 @@ const Ambientes = props => {
               <>
                 <StepCapaBase
                   ambientes={tipoZona}
+                  baseLayer={
+                    mapContext.state.vectorLayers.find(
+                      element => element.name === 'ambientes_capa_base'
+                    ).layer
+                  }
                   onUpdateStep={onUpdateStep}
                 />
               </>

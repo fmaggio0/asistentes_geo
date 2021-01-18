@@ -53,9 +53,7 @@ export default props => {
 
   useEffect(() => {
     //Axios api call para traer geometrias de la capa base
-    console.log(selectedBaseLayer);
     if (selectedBaseLayer) {
-      console.log('entro');
       mapContext.addGeoJSONLayer(dataCapaBase, 'ambientes_capa_base');
       /*var capabase = new L.GeoJSON(dataCapaBase, {
         onEachFeature: onEachFeature

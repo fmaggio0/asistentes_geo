@@ -13,10 +13,10 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import { featureCollection } from '@turf/helpers';
 import FormHelperText from '@material-ui/core/FormHelperText';
+import { Box } from '@material-ui/core';
 
 //Context
 import MapContext from '../../../contexts/MapContext';
-import { Box } from '@material-ui/core';
 
 const useStyles = makeStyles(theme360 => ({
   labelTitle: {
@@ -100,7 +100,7 @@ export default props => {
   const classes = useStyles();
   const [typeSelected, setTypeSelected] = useState(types);
   const [rows, setRows] = useState(data);
-  const { ambientes } = props;
+  const { ambientes, baseLayer } = props;
   const [featureGroupAmbientes, setFeatureGroupAmbientes] = useState([]);
   const mapContext = useContext(MapContext);
 
@@ -119,7 +119,7 @@ export default props => {
 
     let setAmbientesLayers = [];
 
-    mapContext.state.map.baseLayer.eachLayer(function(layer) {
+    baseLayer.eachLayer(function(layer) {
       if (layer.feature.properties.Class === row.class) {
         let foundIndex = featureGroupAmbientes.findIndex(
           x => x.id === layer._leaflet_id
@@ -163,13 +163,6 @@ export default props => {
     console.log(resultBaseLayer);
     download(JSON.stringify(resultBaseLayer), 'result.geojson', 'text/plain');
   };
-
-  /*useEffect(() => {
-    console.log('render');
-    setTypeSelected(types);
-    console.log(data);
-    setRows(data);
-  }, []);*/
 
   return (
     <>

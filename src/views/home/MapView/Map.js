@@ -9,14 +9,12 @@ import 'src/assets/css/map.css';
 
 import geojson from 'src/data/bk_subway_entrances.json';
 import lotes from 'src/data/Fields.json';
-import ButtonActionAmbientes from 'src/components/Asistentes/Ambientes/ButtonAction';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
-import EditTool from 'src/components/GisTools/EditTool';
 import RightPanel from 'src/components/RightPanel/index';
 import { MapProvider } from '../../../contexts/MapContext';
 import { withStyles } from '@material-ui/core/styles';
-import * as turf from '@turf/turf';
+import EditTool from 'src/components/GisTools/EditTool';
 
 // store the map configuration properties in an object.
 
@@ -79,15 +77,23 @@ class Map extends Component {
       selected: null,
       editSelected: false,
       cursor: null,
-      lastZoom: null
+      lastZoom: null,
+      editTool: {
+        isActive: false,
+        editLayer: null,
+        contextLayer: null,
+        result: null
+      }
     };
     this._mapNode = null;
-    this.onEachFeature = this.onEachFeature.bind(this);
+    this.onEachFeatureClosure = this.onEachFeatureClosure.bind(this);
     this.highlight = this.highlight.bind(this);
     this.dehighlight = this.dehighlight.bind(this);
     this.select = this.select.bind(this);
-    this.handleEditTools = this.handleEditTools.bind(this);
     this.updateVectorLayer = this.updateVectorLayer.bind(this);
+    this.removeVectorGroup = this.removeVectorGroup.bind(this);
+    this.enableEditTool = this.enableEditTool.bind(this);
+    this.disableEditTool = this.disableEditTool.bind(this);
   }
 
   componentDidMount() {
@@ -131,7 +137,7 @@ class Map extends Component {
     // create a native Leaflet GeoJSON SVG Layer to add as an interactive overlay to the map
     // an options object is passed to define functions for customizing the layer
     const geojsonLayer = L.geoJson(geojson, {
-      onEachFeature: this.onEachFeature,
+      onEachFeature: this.onEachFeatureClosure(groupName),
       style: function() {
         return styleEmpty;
       }
@@ -171,6 +177,17 @@ class Map extends Component {
         found.layer.removeLayer(found.layer.getLayer(element.id));
       }
     });
+    this.setState({ ...this.state, selected: null });
+  }
+
+  removeVectorGroup(groupName) {
+    let found = this.state.vectorLayers.find(e => e.name === groupName);
+    this.state.map.removeLayer(found.layer);
+    this.setState(prevState => ({
+      vectorLayers: prevState.vectorLayers.filter(
+        layer => layer.name !== groupName
+      )
+    }));
   }
 
   zoomToFeature(target) {
@@ -178,43 +195,39 @@ class Map extends Component {
     this.state.map.fitBounds(target.getBounds());
   }
 
-  onEachFeature(feature, layer, groupName) {
-    //console.log(groupName);
-    layer.on('click', e => {
-      if (this.state.editSelected !== true) this.select(e.target);
-    });
+  onEachFeatureClosure(groupName) {
+    const onEachFeature = (feature, layer) => {
+      layer.on('click', e => {
+        this.select(e.target);
+      });
 
-    //Solo para lotes
-    //if (groupName) {
-    layer
-      .bindTooltip(
-        feature.properties.Field + ' <br> ' + feature.properties.Crop,
-        {
-          permanent: true,
-          direction: 'center'
-        }
-      )
-      .openTooltip();
-    //}
+      //Only Fields
+      if (groupName === 'lotes') {
+        layer
+          .bindTooltip(
+            feature.properties.Field + ' <br> ' + feature.properties.Crop,
+            {
+              permanent: true,
+              direction: 'center'
+            }
+          )
+          .openTooltip();
+      }
+    };
+
+    return onEachFeature;
   }
 
   highlight(layer) {
-    layer.options.highlight = true;
     layer.setStyle(styleSelected);
+    layer.options.highlight = true;
+    this.setState({ ...this.state, selected: layer });
   }
 
   dehighlight(layer) {
-    /*if (
-      layer &&
-      (this.state.selected === null ||
-        this.state.selected._leaflet_id !== layer._leaflet_id)
-    ) {*/
     layer.setStyle(styleEmpty);
     layer.options.highlight = false;
-    /*} else {
-      console.log('nolayer');
-      this.state.map.
-    }*/
+    this.setState({ ...this.state, selected: null });
   }
 
   select(layer) {
@@ -223,18 +236,40 @@ class Map extends Component {
     }
 
     this.state.map.fitBounds(layer.getBounds());
-    this.setState(state => (state.selected = layer));
-    this.setState(state => (state.editSelected = true));
-    if (previous) {
+
+    if (previous && previous !== layer) {
       this.dehighlight(previous);
+      this.highlight(layer);
+    } else if (this.state.selected === layer) {
+      this.dehighlight(previous);
+    } else {
+      this.highlight(layer);
     }
 
-    this.highlight(layer);
+    //this.setState(state => (state.editSelected = true));
   }
 
-  handleEditTools() {
-    this.setState({ editSelected: false });
-    this.dehighlight(this.state.selected);
+  enableEditTool(editlayer, contextlayer) {
+    console.log('enableedit');
+    this.setState(prevState => ({
+      editTool: {
+        ...prevState.editTool,
+        isActive: true,
+        editLayer: editlayer,
+        contextLayer: contextlayer
+      }
+    }));
+  }
+
+  disableEditTool() {
+    this.setState(prevState => ({
+      editTool: {
+        ...prevState.editTool,
+        isActive: false,
+        editLayer: null,
+        contextLayer: null
+      }
+    }));
   }
 
   init(id) {
@@ -286,6 +321,15 @@ class Map extends Component {
           <RightPanel />
           <MeasureTool />
           <CoordinatesTool />
+
+          {this.state.editTool.isActive && (
+            <EditTool
+              editLayer={this.state.editTool.editLayer}
+              contextLayer={this.state.editTool.contextLayer}
+              result={this.updateVectorLayer}
+              unmountMe={this.disableEditTool}
+            />
+          )}
         </MapProvider>
         <div
           ref={node => (this._mapNode = node)}

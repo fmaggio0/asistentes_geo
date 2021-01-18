@@ -134,18 +134,22 @@ const EditTool = props => {
   const { editLayer, contextLayer } = props;
 
   useEffect(() => {
-    if (contextLayer.hasLayer(editLayer)) {
-      var diff = contextLayer.removeLayer(editLayer).toGeoJSON();
-      setContextLayerLessEditLayer(diff);
-      contextLayer.addLayer(editLayer);
+    if (editLayer) {
+      if (contextLayer.hasLayer(editLayer)) {
+        var diff = contextLayer.removeLayer(editLayer).toGeoJSON();
+        setContextLayerLessEditLayer(diff);
+        contextLayer.addLayer(editLayer);
+      }
+
+      setEditLayerInfo({
+        properties: editLayer.toGeoJSON().properties,
+        length: turf.flatten(editLayer.toGeoJSON()).features.length
+      });
+
+      setLayer(editLayer.toGeoJSON());
+    } else {
+      setContextLayerLessEditLayer(contextLayer);
     }
-
-    setEditLayerInfo({
-      properties: editLayer.toGeoJSON().properties,
-      length: turf.flatten(editLayer.toGeoJSON()).features.length
-    });
-
-    setLayer(editLayer.toGeoJSON());
 
     return () => {
       mapContext.state.map.editTools.featuresLayer.clearLayers();
@@ -169,7 +173,8 @@ const EditTool = props => {
       isActive: false,
       text: ''
     });
-    editableLayer.off('click');
+
+    if (editableLayer) editableLayer.off('click');
 
     let stateCopy = { ...activeAction };
     Object.keys(stateCopy).forEach(key => {
@@ -274,15 +279,22 @@ const EditTool = props => {
     let drawGeometryChecked = geometryCheck(drawGeom);
     let process;
 
-    if (activeCutRef.current === true) {
-      process = cutAll(drawGeometryChecked, defaultGeom);
-      if (!process) {
-        //toggleActiveAction();
-        return;
+    if (defaultGeom) {
+      if (activeCutRef.current === true) {
+        process = cutAll(drawGeometryChecked, defaultGeom);
+        if (!process) {
+          //toggleActiveAction();
+          return;
+        }
+      } else {
+        process = unionAll(drawGeometryChecked, defaultGeom);
       }
     } else {
-      process = unionAll(drawGeometryChecked, defaultGeom);
+      process = drawGeometryChecked;
     }
+
+    console.log(process);
+    console.log(contextLayerLessEditLayerRef.current);
 
     let geometryWithoutIntersections = checkForIntersections(
       process,
@@ -462,6 +474,7 @@ const EditTool = props => {
     if (error === false) setGeomtryHistory(oldArray => [...oldArray, geoj]);
     mapContext.state.map.editTools.featuresLayer.clearLayers();
     let lay = L.GeoJSON.geometryToLayer(geoj);
+    console.log(lay);
     mapContext.state.map.editTools.featuresLayer.addLayer(lay);
     lay.enableEdit();
     setEditableLayer(lay);

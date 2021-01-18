@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
@@ -7,10 +7,11 @@ import { faLayerGroup } from '@fortawesome/pro-solid-svg-icons';
 import { faPen, faFileChartLine } from '@fortawesome/pro-light-svg-icons';
 import MapContext from 'src/contexts/MapContext';
 import EditTool from 'src/components/GisTools/EditTool';
+import Ambientes from 'src/components/Asistentes/Ambientes/index';
 import { map } from 'lodash';
 
 const useStyles = makeStyles(theme => ({
-  buttongroup: {
+  boxgroup: {
     position: 'absolute',
     zIndex: 800,
     top: '20px',
@@ -21,6 +22,14 @@ const useStyles = makeStyles(theme => ({
     borderRadius: 4
   },
   button: {
+    width: 35,
+    height: 35,
+    minWidth: 35,
+    '&:not(:last-child)': {
+      borderRight: 0
+    }
+  },
+  buttongroup: {
     width: 35,
     height: 35,
     minWidth: 35,
@@ -39,28 +48,46 @@ const RightPanel = props => {
   const classes = useStyles();
   const [toggleGroup, setToggleGroup] = useState(false);
   const [editTool, setEditTool] = useState(false);
+  const [reports, setReports] = useState(false);
   const mapContext = useContext(MapContext);
+
+  const toggleEditTool = () => {
+    let editlayer = mapContext.state.selected;
+    let contextlayer = mapContext.state.vectorLayers.find(
+      element => element.name === 'lotes'
+    ).layer;
+
+    mapContext.enableEditTool(editlayer, contextlayer);
+  };
+
+  /*useEffect(() => {
+    console.log(mapContext.state.editTool);
+  }, [mapContext.state.editTool]);*/
 
   return (
     <>
-      <Box className={classes.buttongroup}>
-        <Button className={classes.button} disabled>
+      <Box className={classes.boxgroup}>
+        <Button className={classes.buttongroup} disabled>
           <FontAwesomeIcon icon={faLayerGroup} />
         </Button>
-        <Button className={classes.button} style={{ borderRadius: 0 }}>
+        <Button
+          className={classes.button}
+          style={{ borderRadius: 0 }}
+          onClick={() => setReports(!reports)}
+        >
           <FontAwesomeIcon icon={faFileChartLine} />
         </Button>
         <Button
           className={classes.button}
           style={{ borderRadius: 0 }}
-          onClick={() => setEditTool(!editTool)}
+          onClick={toggleEditTool}
           disabled={!mapContext.state.selected}
         >
           <FontAwesomeIcon icon={faPen} />
         </Button>
       </Box>
 
-      {editTool && (
+      {/*editTool && (
         <EditTool
           editLayer={mapContext.state.selected}
           contextLayer={
@@ -71,7 +98,9 @@ const RightPanel = props => {
           result={mapContext.updateVectorLayer}
           unmountMe={() => setEditTool(false)}
         />
-      )}
+      )*/}
+
+      {reports && <Ambientes unmountMe={() => setReports(false)} />}
     </>
   );
 };
