@@ -34,7 +34,7 @@ export default props => {
   useEffect(() => {
     if (mapContext.state.selected) {
       setSelectLayerName(mapContext.state.selected.feature.properties.Field);
-      props.onChangeLote(mapContext.state.selected.feature.properties.Field);
+      props.onChangeLote(mapContext.state.selected);
     }
   }, [mapContext.state.selected]);
 

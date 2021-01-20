@@ -131,13 +131,15 @@ const EditTool = props => {
     selectLayers: []
   });
   const mapContext = useContext(MapContext);
-  const { editLayer, contextLayer } = props;
+  const { editLayer, contextLayer, featureGroup } = props;
 
   useEffect(() => {
     if (editLayer) {
       if (contextLayer.hasLayer(editLayer)) {
-        var diff = contextLayer.removeLayer(editLayer).toGeoJSON();
-        setContextLayerLessEditLayer(diff);
+        let diff = contextLayer.removeLayer(editLayer).toGeoJSON();
+        if (diff.features.length > 0) {
+          setContextLayerLessEditLayer(diff);
+        }
         contextLayer.addLayer(editLayer);
       }
 
@@ -148,7 +150,7 @@ const EditTool = props => {
 
       setLayer(editLayer.toGeoJSON());
     } else {
-      setContextLayerLessEditLayer(contextLayer);
+      setContextLayerLessEditLayer(contextLayer.toGeoJSON());
     }
 
     return () => {
@@ -157,10 +159,6 @@ const EditTool = props => {
       mapContext.cursorOnMap();
     };
   }, []);
-
-  /*useEffect(() => {
-    console.log(geomtryHistory);
-  }, [geomtryHistory]);*/
 
   const toggleActiveCut = () => {
     toggleActiveAction();
@@ -293,14 +291,14 @@ const EditTool = props => {
       process = drawGeometryChecked;
     }
 
-    console.log(process);
-    console.log(contextLayerLessEditLayerRef.current);
+    if (contextLayerLessEditLayerRef.current !== null) {
+      process = checkForIntersections(
+        process,
+        contextLayerLessEditLayerRef.current
+      );
+    }
 
-    let geometryWithoutIntersections = checkForIntersections(
-      process,
-      contextLayerLessEditLayerRef.current
-    );
-    let resultGeometryChecked = geometryCheck(geometryWithoutIntersections);
+    let resultGeometryChecked = geometryCheck(process);
 
     toggleActiveAction();
 
@@ -340,13 +338,13 @@ const EditTool = props => {
     props.result([
       {
         id: editLayer._leaflet_id,
-        type: 'lotes',
+        type: featureGroup,
         geojson: editLayerLessDiff,
         operation: 'update'
       },
       {
         id: null,
-        type: 'lotes',
+        type: featureGroup,
         geojson: ungroup.selectLayers,
         operation: 'create'
       }
@@ -382,13 +380,13 @@ const EditTool = props => {
     props.result([
       {
         id: editLayer._leaflet_id,
-        type: 'lotes',
+        type: featureGroup,
         geojson: editLayerUnionGroup,
         operation: 'update'
       },
       {
         id: group.selectLayers._leaflet_id,
-        type: 'lotes',
+        type: featureGroup,
         operation: 'remove'
       }
     ]);
@@ -398,16 +396,30 @@ const EditTool = props => {
   };
 
   const saveEditLayer = () => {
+    console.log('save');
     let resultGeoJson = editableLayer.toGeoJSON();
     resultGeoJson.properties = editLayerInfo.properties;
-    props.result([
-      {
-        id: editLayer._leaflet_id,
-        type: 'lotes',
-        geojson: resultGeoJson,
-        operation: 'update'
-      }
-    ]);
+
+    if (editLayer) {
+      props.result([
+        {
+          id: editLayer._leaflet_id,
+          type: featureGroup,
+          geojson: resultGeoJson,
+          operation: 'update'
+        }
+      ]);
+    } else {
+      props.result([
+        {
+          id: null,
+          type: featureGroup,
+          geojson: resultGeoJson,
+          operation: 'create'
+        }
+      ]);
+    }
+
     props.unmountMe();
   };
 
@@ -452,7 +464,7 @@ const EditTool = props => {
       props.result([
         {
           id: editLayer._leaflet_id,
-          type: 'lotes',
+          type: featureGroup,
           geojson: resultGeoJson,
           operation: 'update'
         }
@@ -461,7 +473,7 @@ const EditTool = props => {
       props.result([
         {
           id: editLayer._leaflet_id,
-          type: 'lotes',
+          type: featureGroup,
           operation: 'remove'
         }
       ]);
@@ -474,7 +486,6 @@ const EditTool = props => {
     if (error === false) setGeomtryHistory(oldArray => [...oldArray, geoj]);
     mapContext.state.map.editTools.featuresLayer.clearLayers();
     let lay = L.GeoJSON.geometryToLayer(geoj);
-    console.log(lay);
     mapContext.state.map.editTools.featuresLayer.addLayer(lay);
     lay.enableEdit();
     setEditableLayer(lay);
@@ -498,11 +509,7 @@ const EditTool = props => {
       zIndexOffset: 1000
     });
 
-    if (snapGuideLayer.getLayers().length > 1) {
-      snap.disable();
-    } else {
-      snap.enable();
-    }
+    snap.enable();
 
     if (!lay.listens('editable:disable')) {
       lay.on('editable:disable', function(dragend) {
@@ -515,11 +522,13 @@ const EditTool = props => {
         try {
           let geoj = unify(dragend.layer.toGeoJSON());
           geoj = geometryCheck(geoj);
-          geoj = checkForIntersections(
-            geoj,
-            contextLayerLessEditLayerRef.current
-          );
-          geoj = geometryCheck(geoj);
+          if (contextLayerLessEditLayerRef.current !== null) {
+            geoj = checkForIntersections(
+              geoj,
+              contextLayerLessEditLayerRef.current
+            );
+            geoj = geometryCheck(geoj);
+          }
           setLayer(geoj);
         } catch (e) {
           console.log(e);
@@ -533,11 +542,13 @@ const EditTool = props => {
         try {
           let geoj = unify(dragend.layer.toGeoJSON());
           geoj = geometryCheck(geoj);
-          geoj = checkForIntersections(
-            geoj,
-            contextLayerLessEditLayerRef.current
-          );
-          geoj = geometryCheck(geoj);
+          if (contextLayerLessEditLayerRef.current !== null) {
+            geoj = checkForIntersections(
+              geoj,
+              contextLayerLessEditLayerRef.current
+            );
+            geoj = geometryCheck(geoj);
+          }
           setLayer(geoj);
         } catch (e) {
           console.log(e);
@@ -597,8 +608,6 @@ const EditTool = props => {
     snapMarker.on('unsnap', function(e) {
       snapMarker.remove();
     });
-
-    //$('.leaflet-overlay-pane path').removeClass('leaflet-interactive');
   };
 
   return (
@@ -793,7 +802,10 @@ const EditTool = props => {
                 className={classes.button}
                 onClick={groupObject}
                 color={activeAction.group ? 'primary' : 'default'}
-                disabled={contextLayer.toGeoJSON().features.length <= 1}
+                disabled={
+                  contextLayer.toGeoJSON().type === 'FeatureCollection' &&
+                  contextLayer.toGeoJSON().features.length <= 1
+                }
               >
                 <FontAwesomeIcon icon={faObjectGroup} size="lg" />
               </Button>

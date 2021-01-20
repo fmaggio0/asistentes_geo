@@ -90,10 +90,12 @@ class Map extends Component {
     this.highlight = this.highlight.bind(this);
     this.dehighlight = this.dehighlight.bind(this);
     this.select = this.select.bind(this);
-    this.updateVectorLayer = this.updateVectorLayer.bind(this);
     this.removeVectorGroup = this.removeVectorGroup.bind(this);
     this.enableEditTool = this.enableEditTool.bind(this);
     this.disableEditTool = this.disableEditTool.bind(this);
+    this.setResultEditTool = this.setResultEditTool.bind(this);
+    this.getResultEditTool = this.getResultEditTool.bind(this);
+    this.saveEditTool = this.saveEditTool.bind(this);
   }
 
   componentDidMount() {
@@ -161,35 +163,6 @@ class Map extends Component {
     this.zoomToFeature(geojsonLayer);
   }
 
-  updateVectorLayer(data) {
-    data.forEach(element => {
-      let found = this.state.vectorLayers.find(e => e.name === element.type);
-      if (element.operation === 'create') {
-        found.layer.addData(element.geojson);
-      }
-
-      if (element.operation === 'update') {
-        found.layer.removeLayer(found.layer.getLayer(element.id));
-        found.layer.addData(element.geojson);
-      }
-
-      if (element.operation === 'remove') {
-        found.layer.removeLayer(found.layer.getLayer(element.id));
-      }
-    });
-    this.setState({ ...this.state, selected: null });
-  }
-
-  removeVectorGroup(groupName) {
-    let found = this.state.vectorLayers.find(e => e.name === groupName);
-    this.state.map.removeLayer(found.layer);
-    this.setState(prevState => ({
-      vectorLayers: prevState.vectorLayers.filter(
-        layer => layer.name !== groupName
-      )
-    }));
-  }
-
   zoomToFeature(target) {
     // set the map's center & zoom so that it fits the geographic extent of the layer
     this.state.map.fitBounds(target.getBounds());
@@ -245,16 +218,14 @@ class Map extends Component {
     } else {
       this.highlight(layer);
     }
-
-    //this.setState(state => (state.editSelected = true));
   }
 
-  enableEditTool(editlayer, contextlayer) {
-    console.log('enableedit');
+  enableEditTool(editlayer, contextlayer, featureGroup) {
     this.setState(prevState => ({
       editTool: {
         ...prevState.editTool,
         isActive: true,
+        featureGroup: featureGroup,
         editLayer: editlayer,
         contextLayer: contextlayer
       }
@@ -266,9 +237,54 @@ class Map extends Component {
       editTool: {
         ...prevState.editTool,
         isActive: false,
+        featureGroup: null,
         editLayer: null,
         contextLayer: null
       }
+    }));
+  }
+
+  saveEditTool() {
+    /*console.log('saveedittol');
+    console.log(this.editToolRef);
+    this.editToolRef.saveEditLayer();*/
+  }
+
+  setResultEditTool(data) {
+    console.log(data);
+    data.forEach(element => {
+      let found = this.state.vectorLayers.find(e => e.name === element.type);
+      if (element.operation === 'create' && found) {
+        found.layer.addData(element.geojson);
+      }
+
+      if (element.operation === 'create' && !found) {
+        console.log(element);
+      }
+
+      if (element.operation === 'update') {
+        found.layer.removeLayer(found.layer.getLayer(element.id));
+        found.layer.addData(element.geojson);
+      }
+
+      if (element.operation === 'remove') {
+        found.layer.removeLayer(found.layer.getLayer(element.id));
+      }
+    });
+    this.setState({ ...this.state, selected: null });
+  }
+
+  getResultEditTool() {
+    return this.state.editTool.result;
+  }
+
+  removeVectorGroup(groupName) {
+    let found = this.state.vectorLayers.find(e => e.name === groupName);
+    this.state.map.removeLayer(found.layer);
+    this.setState(prevState => ({
+      vectorLayers: prevState.vectorLayers.filter(
+        layer => layer.name !== groupName
+      )
     }));
   }
 
@@ -326,8 +342,10 @@ class Map extends Component {
             <EditTool
               editLayer={this.state.editTool.editLayer}
               contextLayer={this.state.editTool.contextLayer}
-              result={this.updateVectorLayer}
+              featureGroup={this.state.editTool.featureGroup}
+              result={this.setResultEditTool}
               unmountMe={this.disableEditTool}
+              //ref={ref => (this.editToolRef = ref)}
             />
           )}
         </MapProvider>

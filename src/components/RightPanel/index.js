@@ -57,7 +57,7 @@ const RightPanel = props => {
       element => element.name === 'lotes'
     ).layer;
 
-    mapContext.enableEditTool(editlayer, contextlayer);
+    mapContext.enableEditTool(editlayer, contextlayer, 'lotes');
   };
 
   /*useEffect(() => {

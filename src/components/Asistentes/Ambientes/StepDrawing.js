@@ -7,6 +7,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import EditTool from 'src/components/GisTools/EditTool';
 import L from 'leaflet';
+import * as turf from '@turf/turf';
 
 //Context
 import MapContext from '../../../contexts/MapContext';
@@ -23,43 +24,24 @@ export default props => {
   const classes = useStyles();
   const [ambiente, setAmbiente] = useState('');
   const [notas, setNotas] = useState('');
-  const { ambientes } = props;
+  const { ambientes, lote } = props;
   const mapContext = useContext(MapContext);
 
-  /*useEffect(() => {
-    let editlayer = mapContext.state.selected;
-    let editlayer1 = L.featureGroup();
-
-    console.log(editlayer1);
-
-    let contextlayer = mapContext.state.vectorLayers.find(
-      element => element.name === 'lotes'
-    ).layer;
-
-    mapContext.enableEditTool(editlayer, contextlayer);
-  }, []);*/
+  useEffect(() => {
+    if (ambiente) {
+      let editlayer = null;
+      let bbox = turf.bbox(lote.toGeoJSON());
+      let bboxPolygon = turf.bboxPolygon(bbox);
+      let buffered = turf.buffer(bboxPolygon, 500, { units: 'meters' });
+      let bboxWithDifference = turf.difference(buffered, lote.toGeoJSON());
+      let contextLayer = L.GeoJSON.geometryToLayer(bboxWithDifference);
+      mapContext.enableEditTool(editlayer, contextLayer, 'drawAmbientes');
+    }
+  }, [ambiente]);
 
   const handleChange = event => {
-    console.log(event.target.value);
-
+    mapContext.saveEditTool();
     setAmbiente(event.target.value);
-
-    let editlayer = null;
-    let contextlayer = mapContext.state.vectorLayers.find(
-      element => element.name === 'lotes'
-    ).layer;
-
-    mapContext.enableEditTool(editlayer, contextlayer);
-
-    /*mapContext.state.map.baseLayer.on('click', function(e) {
-      console.log(e.layer.setStyle());
-      e.layer.setStyle({
-        fillColor: event.target.value.color,
-        fillOpacity: '1',
-        weight: '1',
-        color: '#000000'
-      });
-    });*/
   };
 
   const handleChangeNotas = event => {

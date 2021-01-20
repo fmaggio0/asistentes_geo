@@ -152,7 +152,7 @@ const Ambientes = props => {
 
             {step === 'setAmbienteDrawing' && (
               <>
-                <StepDrawing ambientes={tipoZona} />
+                <StepDrawing ambientes={tipoZona} lote={lote} />
                 <Box my={2} display="flex" justifyContent="space-between">
                   <Button
                     onClick={() => setStep('init')}
