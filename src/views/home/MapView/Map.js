@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { makeStyles } from '@material-ui/core';
 import L from 'leaflet';
 import 'leaflet-editable';
 import 'leaflet-measure-path/leaflet-measure-path';
@@ -7,7 +8,6 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-measure-path/leaflet-measure-path.css';
 import 'src/assets/css/map.css';
 
-import geojson from 'src/data/bk_subway_entrances.json';
 import lotes from 'src/data/Fields.json';
 import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
@@ -55,124 +55,170 @@ const styleEmpty = {
   dashArray: 0
 };
 
-const useStyles = theme => ({
+const useStyles = makeStyles(theme => ({
   map: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     width: '100%'
   }
-});
+}));
 
-class Map extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      map: null,
-      tileLayer: null,
-      vectorLayers: [],
-      geojsonLayer: null,
-      geojson: null,
-      numEntrances: null,
-      selected: null,
-      editSelected: false,
-      cursor: null,
-      lastZoom: null,
-      editTool: {
-        isActive: false,
-        editLayer: null,
-        contextLayer: null,
-        result: null
+const Map = props => {
+  const classes = useStyles();
+  var useStateRef = require('react-usestateref');
+  const [map, setMap] = useState(null);
+  const [tileLayer, setTileLayer] = useState(null);
+  const [vectorLayers, setVectorLayers] = useState([]);
+  const [selected, setSelected, selectedRef] = useStateRef(null);
+  const [editSelected, setEditSelected] = useState(null);
+  const [cursor, setCursor] = useState(null);
+  const [lastZoom, setLastZoom] = useState(null);
+  const [editTool, setEditTool] = useState({
+    isActive: false,
+    editLayer: null,
+    contextLayer: null,
+    result: null
+  });
+  const editToolRef = useRef();
+
+  useEffect(() => {
+    let map = L.map('map', config.params);
+    //L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+    // a TileLayer is used as the "basemap"
+    const tileLayer = L.tileLayer(
+      config.tileLayer.uri,
+      config.tileLayer.params
+    ).addTo(map);
+
+    map.measureTool = L.layerGroup().addTo(map);
+
+    //Zoom at level 12
+    let tooltipThreshold = 14;
+    map.on('zoomend', () => {
+      let zoom = map.getZoom();
+      let lastZoomMap;
+      if (lastZoom) lastZoomMap = lastZoom;
+      else lastZoomMap = map.getZoom();
+
+      if (
+        zoom < tooltipThreshold &&
+        (!lastZoomMap || lastZoomMap >= tooltipThreshold)
+      ) {
+        map.getPane('tooltipPane').style.display = 'none';
+      } else if (
+        zoom >= tooltipThreshold &&
+        (!lastZoomMap || lastZoomMap < tooltipThreshold)
+      ) {
+        map.getPane('tooltipPane').style.display = 'block';
       }
-    };
-    this._mapNode = null;
-    this.onEachFeatureClosure = this.onEachFeatureClosure.bind(this);
-    this.highlight = this.highlight.bind(this);
-    this.dehighlight = this.dehighlight.bind(this);
-    this.select = this.select.bind(this);
-    this.removeVectorGroup = this.removeVectorGroup.bind(this);
-    this.enableEditTool = this.enableEditTool.bind(this);
-    this.disableEditTool = this.disableEditTool.bind(this);
-    this.setResultEditTool = this.setResultEditTool.bind(this);
-    this.getResultEditTool = this.getResultEditTool.bind(this);
-    this.saveEditTool = this.saveEditTool.bind(this);
-    this.myRef = React.createRef();
-  }
+      setLastZoom(zoom);
+    });
 
-  componentDidMount() {
+    // set our state to include the tile layer and map
+    setMap(map);
+    setTileLayer(tileLayer);
+  }, []);
+
+  useEffect(() => {
+    if (map) {
+      addGeoJSONLayer(lotes, 'lotes');
+    }
+  }, [map]);
+
+  /*componentDidMount() {
     // code to run just after the component "mounts" / DOM elements are created
     // we could make an AJAX request for the GeoJSON data here if it wasn't stored locally
-    this.getData();
+    getData();
     // create the Leaflet map object
-    if (!this.state.map) this.init(this._mapNode);
+    if (!state.map) init(_mapNode);
   }
 
   componentDidUpdate(prevProps, prevState) {
+    console.log(prevState);
+    if (prevState.vectorLayers !== state.vectorLayers) {
+      console.log('cambio:', state.vectorLayers);
+    }
+    //console.log(prevProps);
     // code to run when the component receives new props or state
     // check to see if geojson is stored, map is created, and geojson overlay needs to be added
-    if (this.state.geojson && this.state.map && !this.state.geojsonLayer) {
+    if (state.geojson && state.map && !state.geojsonLayer) {
       // add the geojson overlay
-      this.addGeoJSONLayer(this.state.geojson, 'lotes');
+      addGeoJSONLayer(state.geojson, 'lotes');
     }
   }
 
   componentWillUnmount() {
     // code to run just before unmounting the component
     // this destroys the Leaflet map object & related event listeners
-    //this.state.map.remove();
-  }
+    //state.map.remove();
+  }*/
 
-  getData() {
+  /*const getData = () => {
     // could also be an AJAX request that results in setting state with the geojson data
     // for simplicity sake we are just importing the geojson data using webpack's json loader
-    this.setState({
-      numEntrances: geojson.features.length,
+    setState({
       geojson: lotes
     });
-  }
+  };*/
 
-  cursorOnMap(type) {
-    if (type) this.setState({ cursor: type });
-    else this.setState({ cursor: null });
-  }
+  const cursorOnMap = type => {
+    if (type) setCursor(type);
+    else setCursor(null);
+  };
 
-  addGeoJSONLayer(geojson, groupName) {
+  const addGeoJSONLayer = (geojson, groupName, styles) => {
     // create a native Leaflet GeoJSON SVG Layer to add as an interactive overlay to the map
     // an options object is passed to define functions for customizing the layer
-    const geojsonLayer = L.geoJson(geojson, {
-      onEachFeature: this.onEachFeatureClosure(groupName),
+    let geojsonLayer = L.geoJson(geojson, {
+      onEachFeature: onEachFeatureClosure(groupName),
       style: function() {
+        if (styles) {
+          return styles;
+        }
         return styleEmpty;
       }
     });
     // add our GeoJSON layer to the Leaflet map object
-    geojsonLayer.addTo(this.state.map);
+    geojsonLayer.addTo(map);
 
     //lotes
-    let layer = {
+    let layer1 = {
       name: groupName,
       layer: geojsonLayer
     };
 
+    setVectorLayers([...vectorLayers, layer1]);
+    //console.log(layer);
+    //setState({ ...state, prueba: layer });
+
     // store the Leaflet GeoJSON layer in our component state for use later
-    this.setState({
-      geojsonLayer,
-      vectorLayers: [...this.state.vectorLayers, layer]
-    });
+    //let copy = [...state.vectorLayers];
+    /*setState({
+      geojsonLayer: geojsonLayer.toGeoJSON(),
+      vectorLayers: [...state.vectorLayers, layer1]
+    });*/
+
+    /*const currentScores = state.vectorLayers;
+    const newScores = currentScores.concat(layer);
+    setState({ vectorLayers: newScores }, function() {
+      console.log(state.vectorLayers);
+    });*/
 
     // fit the geographic extent of the GeoJSON layer within the map's bounds / viewport
-    this.zoomToFeature(geojsonLayer);
-  }
+    zoomToFeature(geojsonLayer);
+  };
 
-  zoomToFeature(target) {
+  const zoomToFeature = target => {
     // set the map's center & zoom so that it fits the geographic extent of the layer
-    this.state.map.fitBounds(target.getBounds());
-  }
+    map.fitBounds(target.getBounds());
+  };
 
-  onEachFeatureClosure(groupName) {
+  const onEachFeatureClosure = groupName => {
     const onEachFeature = (feature, layer) => {
       layer.on('click', e => {
-        this.select(e.target);
+        select(e.target);
       });
 
       //Only Fields
@@ -190,39 +236,38 @@ class Map extends Component {
     };
 
     return onEachFeature;
-  }
+  };
 
-  highlight(layer) {
+  const highlight = layer => {
     layer.setStyle(styleSelected);
     layer.options.highlight = true;
-    this.setState({ ...this.state, selected: layer });
-  }
+    setSelected(layer);
+  };
 
-  dehighlight(layer) {
+  const dehighlight = layer => {
     layer.setStyle(styleEmpty);
     layer.options.highlight = false;
-    this.setState({ ...this.state, selected: null });
-  }
+    setSelected(null);
+  };
 
-  select(layer) {
-    if (this.state.selected !== null) {
-      var previous = this.state.selected;
+  const select = layer => {
+    let previous;
+    if (selectedRef.current !== null) {
+      previous = selectedRef.current;
     }
-
-    this.state.map.fitBounds(layer.getBounds());
-
+    map.fitBounds(layer.getBounds());
     if (previous && previous !== layer) {
-      this.dehighlight(previous);
-      this.highlight(layer);
-    } else if (this.state.selected === layer) {
-      this.dehighlight(previous);
+      dehighlight(previous);
+      highlight(layer);
+    } else if (selectedRef.current === layer) {
+      dehighlight(previous);
     } else {
-      this.highlight(layer);
+      highlight(layer);
     }
-  }
+  };
 
-  enableEditTool(editlayer, contextlayer, featureGroup) {
-    this.setState(prevState => ({
+  const enableEditTool = (editlayer, contextlayer, featureGroup) => {
+    /*setState(prevState => ({
       editTool: {
         ...prevState.editTool,
         isActive: true,
@@ -230,11 +275,17 @@ class Map extends Component {
         editLayer: editlayer,
         contextLayer: contextlayer
       }
-    }));
-  }
+    }));*/
+    setEditTool({
+      isActive: true,
+      featureGroup: featureGroup,
+      editLayer: editlayer,
+      contextLayer: contextlayer
+    });
+  };
 
-  disableEditTool() {
-    this.setState(prevState => ({
+  const disableEditTool = () => {
+    /*setState(prevState => ({
       editTool: {
         ...prevState.editTool,
         isActive: false,
@@ -242,56 +293,64 @@ class Map extends Component {
         editLayer: null,
         contextLayer: null
       }
-    }));
-  }
+    }));*/
+    setEditTool({
+      isActive: false,
+      featureGroup: null,
+      editLayer: null,
+      contextLayer: null
+    });
+  };
 
-  saveEditTool() {
-    console.log('saveedittol');
-    this.myRef.current.saveEditLayer();
-  }
+  const saveEditTool = (properties, style) => {
+    //console.log('saveedittol');
+    editToolRef.current.saveEditLayer(properties, style);
+  };
 
-  setResultEditTool(data) {
-    console.log(data);
+  const setResultEditTool = data => {
     data.forEach(element => {
-      let found = this.state.vectorLayers.find(e => e.name === element.type);
-      if (element.operation === 'create' && found) {
-        found.layer.addData(element.geojson);
-      }
-
-      if (element.operation === 'create' && !found) {
-        this.addGeoJSONLayer(element.geojson, element.type);
-      }
-
-      if (element.operation === 'update') {
-        found.layer.removeLayer(found.layer.getLayer(element.id));
-        found.layer.addData(element.geojson);
-      }
-
-      if (element.operation === 'remove') {
-        found.layer.removeLayer(found.layer.getLayer(element.id));
+      let found = vectorLayers.find(e => e.name === element.type);
+      if (found) {
+        if (element.operation === 'create') {
+          found.layer.addData(element.geojson);
+        }
+        if (element.operation === 'update') {
+          found.layer.removeLayer(found.layer.getLayer(element.id));
+          found.layer.addData(element.geojson);
+        }
+        if (element.operation === 'remove') {
+          found.layer.removeLayer(found.layer.getLayer(element.id));
+        }
+      } else {
+        if (element.operation === 'create' && !found) {
+          addGeoJSONLayer(element.geojson, element.type, element.styles);
+        }
       }
     });
-    this.setState({ ...this.state, selected: null });
-  }
+    setSelected(null);
+  };
 
-  getResultEditTool() {
-    return this.state.editTool.result;
-  }
+  const getResultEditTool = () => {
+    return editTool.result;
+  };
 
-  removeVectorGroup(groupName) {
-    let found = this.state.vectorLayers.find(e => e.name === groupName);
+  const removeVectorGroup = groupName => {
+    let found = vectorLayers.find(e => e.name === groupName);
     if (found) {
-      this.state.map.removeLayer(found.layer);
-      this.setState(prevState => ({
+      map.removeLayer(found.layer);
+
+      /*
+      setState(prevState => ({
         vectorLayers: prevState.vectorLayers.filter(
           layer => layer.name !== groupName
         )
-      }));
+      }));*/
     }
-  }
+  };
 
+  /*
   init(id) {
-    if (this.state.map) return;
+    if (state.map) return;
 
     let map = L.map(id, config.params);
     //L.control.zoom({ position: 'bottomleft' }).addTo(map);
@@ -310,7 +369,7 @@ class Map extends Component {
     map.on('zoomend', () => {
       let zoom = map.getZoom();
       let lastZoom;
-      if (this.state.lastZoom) lastZoom = this.state.lastZoom;
+      if (state.lastZoom) lastZoom = state.lastZoom;
       else lastZoom = map.getZoom();
 
       if (
@@ -324,43 +383,49 @@ class Map extends Component {
       ) {
         map.getPane('tooltipPane').style.display = 'block';
       }
-      this.setState({ lastZoom: zoom });
+      setState({ lastZoom: zoom });
     });
 
     // set our state to include the tile layer
-    this.setState({ map, tileLayer });
-  }
+    setState({ map, tileLayer });
+  }*/
 
-  render() {
-    const { classes } = this.props;
-    return (
-      <div id="mapUI">
-        <MapProvider value={this}>
-          <RightPanel />
-          <MeasureTool />
-          <CoordinatesTool />
+  return (
+    <div id="mapUI">
+      <MapProvider
+        value={{
+          state: { map, selected, vectorLayers },
+          enableEditTool,
+          cursorOnMap,
+          removeVectorGroup,
+          saveEditTool,
+          disableEditTool
+        }}
+      >
+        <RightPanel />
+        <MeasureTool />
+        <CoordinatesTool />
 
-          {this.state.editTool.isActive && (
-            <EditTool
-              editLayer={this.state.editTool.editLayer}
-              contextLayer={this.state.editTool.contextLayer}
-              featureGroup={this.state.editTool.featureGroup}
-              result={this.setResultEditTool}
-              unmountMe={this.disableEditTool}
-              //ref={ref => (this.editToolRef = ref)}
-              ref={this.myRef}
-            />
-          )}
-        </MapProvider>
-        <div
-          ref={node => (this._mapNode = node)}
-          id="map"
-          className={classes.map}
-          style={this.state.cursor ? { cursor: this.state.cursor } : {}}
-        />
-      </div>
-    );
-  }
-}
+        {editTool.isActive && (
+          <EditTool
+            editLayer={editTool.editLayer}
+            contextLayer={editTool.contextLayer}
+            featureGroup={editTool.featureGroup}
+            result={setResultEditTool}
+            unmountMe={disableEditTool}
+            //ref={ref => (editToolRef = ref)}
+            ref={editToolRef}
+          />
+        )}
+      </MapProvider>
+      <div
+        //ref={node => (_mapNode = node)}
+        id="map"
+        className={classes.map}
+        style={cursor ? { cursor: cursor } : {}}
+      />
+    </div>
+  );
+};
 
-export default withStyles(useStyles)(Map);
+export default Map;

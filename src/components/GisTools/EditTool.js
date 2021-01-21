@@ -405,29 +405,41 @@ const EditTool = forwardRef((props, ref) => {
     props.unmountMe();
   };
 
-  const saveEditLayer = () => {
-    console.log('save');
-    let resultGeoJson = editableLayer.toGeoJSON();
-    resultGeoJson.properties = editLayerInfo.properties;
+  const saveEditLayer = (properties, style) => {
+    console.log(properties);
+    console.log(style);
 
-    if (editLayer) {
-      props.result([
-        {
-          id: editLayer._leaflet_id,
-          type: featureGroup,
-          geojson: resultGeoJson,
-          operation: 'update'
-        }
-      ]);
-    } else {
-      props.result([
-        {
-          id: null,
-          type: featureGroup,
-          geojson: resultGeoJson,
-          operation: 'create'
-        }
-      ]);
+    if (editableLayer) {
+      console.log(editLayerInfo);
+      let resultGeoJson = editableLayer.toGeoJSON();
+
+      if (properties) {
+        resultGeoJson.properties = properties;
+      } else {
+        resultGeoJson.properties = editLayerInfo.properties;
+      }
+
+      if (editLayer) {
+        props.result([
+          {
+            id: editLayer._leaflet_id,
+            type: featureGroup,
+            geojson: resultGeoJson,
+            operation: 'update',
+            styles: style || null
+          }
+        ]);
+      } else {
+        props.result([
+          {
+            id: null,
+            type: featureGroup,
+            geojson: resultGeoJson,
+            operation: 'create',
+            styles: style || null
+          }
+        ]);
+      }
     }
 
     props.unmountMe();

@@ -62,10 +62,6 @@ const RightPanel = props => {
     mapContext.enableEditTool(editlayer, contextlayer, 'lotes');
   };
 
-  /*useEffect(() => {
-    console.log(mapContext.state.editTool);
-  }, [mapContext.state.editTool]);*/
-
   return (
     <>
       <Box className={classes.boxgroup}>
@@ -83,7 +79,7 @@ const RightPanel = props => {
           className={classes.button}
           style={{ borderRadius: 0 }}
           onClick={toggleEditTool}
-          disabled={!mapContext.state.selected}
+          //disabled={!mapContext.state.selected}
         >
           <FontAwesomeIcon icon={faPen} />
         </Button>

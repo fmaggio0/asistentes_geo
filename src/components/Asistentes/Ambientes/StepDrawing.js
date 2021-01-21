@@ -22,6 +22,7 @@ const useStyles = makeStyles(theme360 => ({
 
 export default props => {
   const classes = useStyles();
+  const [groupName, setGroupName] = useState('drawAmbientes');
   const [ambiente, setAmbiente] = useState('');
   const [notas, setNotas] = useState('');
   const { ambientes, lote } = props;
@@ -44,41 +45,46 @@ export default props => {
 
   useEffect(() => {
     if (ambiente) {
-      let type = 'drawAmbientes';
-      let editlayer = null;
-
-      let context;
-      let context2 = mapContext.state.vectorLayers.find(e => e.name === type);
-      console.log(context2);
-      if (context2) {
-        context = turf.combine(context, context2);
-        console.log('hay contexto 2');
-        console.log(context);
-      } else {
-        context = lote.toGeoJSON();
-      }
-      context = lote.toGeoJSON();
-      let bbox = turf.bbox(lote.toGeoJSON());
+      let editLayer = null;
+      let context = lote.toGeoJSON();
+      let context2 = mapContext.state.vectorLayers.find(
+        e => e.name === groupName
+      );
+      let bbox = turf.bbox(context);
       let bboxPolygon = turf.bboxPolygon(bbox);
       let buffered = turf.buffer(bboxPolygon, 500, { units: 'meters' });
-      let bboxWithDifference = turf.difference(buffered, lote.toGeoJSON());
+      let bboxWithDifference = turf.difference(buffered, context);
+
+      if (context2) {
+        context2 = context2.layer.toGeoJSON();
+        bboxWithDifference = turf.union(
+          ...context2.features,
+          bboxWithDifference
+        );
+      }
+
       let contextLayer = L.GeoJSON.geometryToLayer(bboxWithDifference);
-      mapContext.enableEditTool(editlayer, contextLayer, type);
+      mapContext.enableEditTool(editLayer, contextLayer, groupName);
     }
   }, [ambiente]);
 
-  useEffect(() => {
-    console.log(mapContext.state.vectorLayers);
-  }, [mapContext.state.vectorLayers]);
-
   const handleChange = event => {
+    /*let context2 = mapContext.state.vectorLayers.find(
+      e => e.name === groupName
+    );*/
     setAmbiente(event.target.value);
 
-    mapContext.saveEditTool();
+    mapContext.saveEditTool(event.target.value, {
+      fillColor: '#000000',
+      weight: 1,
+      opacity: 1,
+      color: '#000000',
+      fillOpacity: 0,
+      dashArray: 0
+    });
   };
 
   const handleChangeNotas = event => {
-    console.log('notas');
     setNotas(event.target.value);
   };
 
