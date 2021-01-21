@@ -96,6 +96,7 @@ class Map extends Component {
     this.setResultEditTool = this.setResultEditTool.bind(this);
     this.getResultEditTool = this.getResultEditTool.bind(this);
     this.saveEditTool = this.saveEditTool.bind(this);
+    this.myRef = React.createRef();
   }
 
   componentDidMount() {
@@ -245,9 +246,8 @@ class Map extends Component {
   }
 
   saveEditTool() {
-    /*console.log('saveedittol');
-    console.log(this.editToolRef);
-    this.editToolRef.saveEditLayer();*/
+    console.log('saveedittol');
+    this.myRef.current.saveEditLayer();
   }
 
   setResultEditTool(data) {
@@ -259,7 +259,7 @@ class Map extends Component {
       }
 
       if (element.operation === 'create' && !found) {
-        console.log(element);
+        this.addGeoJSONLayer(element.geojson, element.type);
       }
 
       if (element.operation === 'update') {
@@ -280,12 +280,14 @@ class Map extends Component {
 
   removeVectorGroup(groupName) {
     let found = this.state.vectorLayers.find(e => e.name === groupName);
-    this.state.map.removeLayer(found.layer);
-    this.setState(prevState => ({
-      vectorLayers: prevState.vectorLayers.filter(
-        layer => layer.name !== groupName
-      )
-    }));
+    if (found) {
+      this.state.map.removeLayer(found.layer);
+      this.setState(prevState => ({
+        vectorLayers: prevState.vectorLayers.filter(
+          layer => layer.name !== groupName
+        )
+      }));
+    }
   }
 
   init(id) {
@@ -346,6 +348,7 @@ class Map extends Component {
               result={this.setResultEditTool}
               unmountMe={this.disableEditTool}
               //ref={ref => (this.editToolRef = ref)}
+              ref={this.myRef}
             />
           )}
         </MapProvider>

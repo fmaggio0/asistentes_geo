@@ -33,6 +33,8 @@ const useStyles = makeStyles(theme => ({
     width: 35,
     height: 35,
     minWidth: 35,
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
     '&:disabled': {
       backgroundColor: theme.palette.primary.light,
       color: theme.palette.primary.main,

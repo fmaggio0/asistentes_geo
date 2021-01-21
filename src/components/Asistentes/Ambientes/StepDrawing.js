@@ -28,20 +28,53 @@ export default props => {
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
+    /*let editlayer = null;
+    let bbox = turf.bbox(lote.toGeoJSON());
+    let bboxPolygon = turf.bboxPolygon(bbox);
+    let buffered = turf.buffer(bboxPolygon, 500, { units: 'meters' });
+    let bboxWithDifference = turf.difference(buffered, lote.toGeoJSON());
+    let contextLayer = L.GeoJSON.geometryToLayer(bboxWithDifference);
+    mapContext.enableEditTool(editlayer, contextLayer, 'drawAmbientes');*/
+    setAmbiente(ambientes.properties[0]);
+    return () => {
+      // unmount
+      mapContext.disableEditTool();
+    };
+  }, []);
+
+  useEffect(() => {
     if (ambiente) {
+      let type = 'drawAmbientes';
       let editlayer = null;
+
+      let context;
+      let context2 = mapContext.state.vectorLayers.find(e => e.name === type);
+      console.log(context2);
+      if (context2) {
+        context = turf.combine(context, context2);
+        console.log('hay contexto 2');
+        console.log(context);
+      } else {
+        context = lote.toGeoJSON();
+      }
+      context = lote.toGeoJSON();
       let bbox = turf.bbox(lote.toGeoJSON());
       let bboxPolygon = turf.bboxPolygon(bbox);
       let buffered = turf.buffer(bboxPolygon, 500, { units: 'meters' });
       let bboxWithDifference = turf.difference(buffered, lote.toGeoJSON());
       let contextLayer = L.GeoJSON.geometryToLayer(bboxWithDifference);
-      mapContext.enableEditTool(editlayer, contextLayer, 'drawAmbientes');
+      mapContext.enableEditTool(editlayer, contextLayer, type);
     }
   }, [ambiente]);
 
+  useEffect(() => {
+    console.log(mapContext.state.vectorLayers);
+  }, [mapContext.state.vectorLayers]);
+
   const handleChange = event => {
-    mapContext.saveEditTool();
     setAmbiente(event.target.value);
+
+    mapContext.saveEditTool();
   };
 
   const handleChangeNotas = event => {

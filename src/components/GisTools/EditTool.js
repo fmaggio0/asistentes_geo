@@ -1,4 +1,10 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  forwardRef
+} from 'react';
 
 //Material UI components
 import DialogContentText from '@material-ui/core/DialogContentText';
@@ -87,7 +93,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const EditTool = props => {
+const EditTool = forwardRef((props, ref) => {
   var useStateRef = require('react-usestateref');
   const classes = useStyles();
   const [activeAction, setActiveAction, activeActionRef] = useStateRef({
@@ -132,6 +138,10 @@ const EditTool = props => {
   });
   const mapContext = useContext(MapContext);
   const { editLayer, contextLayer, featureGroup } = props;
+
+  useImperativeHandle(ref, () => ({
+    saveEditLayer
+  }));
 
   useEffect(() => {
     if (editLayer) {
@@ -863,6 +873,6 @@ const EditTool = props => {
       </Box>
     </>
   );
-};
+});
 
 export default EditTool;
