@@ -137,7 +137,7 @@ const EditTool = forwardRef((props, ref) => {
     selectLayers: []
   });
   const mapContext = useContext(MapContext);
-  const { editLayer, contextLayer, featureGroup } = props;
+  const { editLayer, contextLayer, groupName, advancedEdit } = props;
 
   useImperativeHandle(ref, () => ({
     saveEditLayer
@@ -345,20 +345,20 @@ const EditTool = forwardRef((props, ref) => {
     editLayerLessDiff.properties = editLayerInfo.properties;
     ungroup.selectLayers.properties = editLayerInfo.properties;
 
-    props.result([
-      {
-        id: editLayer._leaflet_id,
-        type: featureGroup,
-        geojson: editLayerLessDiff,
-        operation: 'update'
-      },
-      {
-        id: null,
-        type: featureGroup,
-        geojson: ungroup.selectLayers,
-        operation: 'create'
-      }
-    ]);
+    let result = {
+      id: editLayer._leaflet_id,
+      type: groupName,
+      geojson: editLayerLessDiff,
+      operation: 'update'
+    };
+    let result1 = {
+      id: null,
+      type: groupName,
+      geojson: ungroup.selectLayers,
+      operation: 'create'
+    };
+    mapContext.setResultEditTool(result);
+    mapContext.setResultEditTool(result1);
 
     setUngroup({ openDialog: false });
     props.unmountMe();
@@ -387,63 +387,52 @@ const EditTool = forwardRef((props, ref) => {
     );
     editLayerUnionGroup.properties = editLayerInfo.properties;
 
-    props.result([
-      {
-        id: editLayer._leaflet_id,
-        type: featureGroup,
-        geojson: editLayerUnionGroup,
-        operation: 'update'
-      },
-      {
-        id: group.selectLayers._leaflet_id,
-        type: featureGroup,
-        operation: 'remove'
-      }
-    ]);
+    let result = {
+      id: editLayer._leaflet_id,
+      type: groupName,
+      geojson: editLayerUnionGroup,
+      operation: 'update'
+    };
+
+    mapContext.removeLayerById(group.selectLayers._leaflet_id, groupName);
+    mapContext.setResultEditTool(result);
 
     setGroup({ openDialog: false });
     props.unmountMe();
   };
 
-  const saveEditLayer = (properties, style) => {
-    console.log(properties);
-    console.log(style);
-
+  const saveEditLayer = () => {
     if (editableLayer) {
-      console.log(editLayerInfo);
       let resultGeoJson = editableLayer.toGeoJSON();
-
-      if (properties) {
-        resultGeoJson.properties = properties;
-      } else {
+      if (editLayerInfo.properties)
         resultGeoJson.properties = editLayerInfo.properties;
-      }
 
-      if (editLayer) {
-        props.result([
-          {
-            id: editLayer._leaflet_id,
-            type: featureGroup,
-            geojson: resultGeoJson,
-            operation: 'update',
-            styles: style || null
-          }
-        ]);
-      } else {
-        props.result([
-          {
-            id: null,
-            type: featureGroup,
-            geojson: resultGeoJson,
-            operation: 'create',
-            styles: style || null
-          }
-        ]);
-      }
+      let result = {
+        id: editLayer ? editLayer._leaflet_id : null,
+        type: groupName,
+        geojson: resultGeoJson,
+        operation: editLayer ? 'update' : 'create'
+      };
+
+      mapContext.setResultEditTool(result);
+      props.unmountMe();
     }
 
     props.unmountMe();
   };
+
+  /*const saveEditLayer2 = () => {
+    if (editableLayer) {
+      let resultGeoJson = editableLayer.toGeoJSON();
+      if (editLayerInfo.properties)
+        resultGeoJson.properties = editLayerInfo.properties;
+
+      props.unmountMe();
+      return resultGeoJson;
+    }
+
+    props.unmountMe();
+  };*/
 
   const RemoveEditLayer = () => {
     mapContext.cursorOnMap('pointer');
@@ -483,22 +472,16 @@ const EditTool = forwardRef((props, ref) => {
       let resultGeoJson = remove.selectLayers;
       resultGeoJson.properties = editLayerInfo.properties;
 
-      props.result([
-        {
-          id: editLayer._leaflet_id,
-          type: featureGroup,
-          geojson: resultGeoJson,
-          operation: 'update'
-        }
-      ]);
+      let result = {
+        id: editLayer._leaflet_id,
+        type: groupName,
+        geojson: resultGeoJson,
+        operation: 'update'
+      };
+
+      mapContext.setResultEditTool(result);
     } else if (remove.operation === 'remove') {
-      props.result([
-        {
-          id: editLayer._leaflet_id,
-          type: featureGroup,
-          operation: 'remove'
-        }
-      ]);
+      mapContext.removeLayerById(editLayer._leaflet_id, groupName);
     }
 
     props.unmountMe();
@@ -808,44 +791,46 @@ const EditTool = forwardRef((props, ref) => {
             </Button>
           </Tooltip>
         </Box>
-        <Box className={classes.buttongroup}>
-          <Tooltip title="Dividir objeto" arrow>
-            <Button
-              className={classes.button}
-              onClick={cutWithLine}
-              color={activeAction.cutWithLine ? 'primary' : 'default'}
-            >
-              <FontAwesomeIcon icon={faScalpelPath} size="lg" />
-            </Button>
-          </Tooltip>
-          <Tooltip title="Agrupar objectos en multiparte" arrow>
-            <div>
+        {advancedEdit && (
+          <Box className={classes.buttongroup}>
+            <Tooltip title="Dividir objeto" arrow>
               <Button
                 className={classes.button}
-                onClick={groupObject}
-                color={activeAction.group ? 'primary' : 'default'}
-                disabled={
-                  contextLayer.toGeoJSON().type === 'FeatureCollection' &&
-                  contextLayer.toGeoJSON().features.length <= 1
-                }
+                onClick={cutWithLine}
+                color={activeAction.cutWithLine ? 'primary' : 'default'}
               >
-                <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+                <FontAwesomeIcon icon={faScalpelPath} size="lg" />
               </Button>
-            </div>
-          </Tooltip>
-          <Tooltip title="Desagrupar objecto multiparte" arrow>
-            <div>
-              <Button
-                className={classes.button}
-                onClick={unGroupObject}
-                disabled={editLayerInfo.length <= 1}
-                color={activeAction.ungroup ? 'primary' : 'default'}
-              >
-                <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
-              </Button>
-            </div>
-          </Tooltip>
-        </Box>
+            </Tooltip>
+            <Tooltip title="Agrupar objectos en multiparte" arrow>
+              <div>
+                <Button
+                  className={classes.button}
+                  onClick={groupObject}
+                  color={activeAction.group ? 'primary' : 'default'}
+                  disabled={
+                    contextLayer.toGeoJSON().type === 'FeatureCollection' &&
+                    contextLayer.toGeoJSON().features.length <= 1
+                  }
+                >
+                  <FontAwesomeIcon icon={faObjectGroup} size="lg" />
+                </Button>
+              </div>
+            </Tooltip>
+            <Tooltip title="Desagrupar objecto multiparte" arrow>
+              <div>
+                <Button
+                  className={classes.button}
+                  onClick={unGroupObject}
+                  disabled={editLayerInfo.length <= 1}
+                  color={activeAction.ungroup ? 'primary' : 'default'}
+                >
+                  <FontAwesomeIcon icon={faObjectUngroup} size="lg" />
+                </Button>
+              </div>
+            </Tooltip>
+          </Box>
+        )}
         <Box className={classes.buttongroup}>
           <Tooltip title="Volver atras" arrow>
             <div>
@@ -858,21 +843,24 @@ const EditTool = forwardRef((props, ref) => {
               </Button>
             </div>
           </Tooltip>
-          <Tooltip title="Eliminar objeto" arrow>
-            <Button
-              className={classes.button}
-              onClick={RemoveEditLayer}
-              color={activeAction.remove ? 'primary' : 'default'}
-            >
-              <FontAwesomeIcon icon={faTrashAlt} size="lg" />
-            </Button>
-          </Tooltip>
-          <Tooltip title="Guardar" arrow onClick={saveEditLayer}>
-            <Button className={classes.button}>
-              <FontAwesomeIcon icon={faSave} size="lg" />
-            </Button>
-          </Tooltip>
-
+          {advancedEdit && (
+            <>
+              <Tooltip title="Eliminar objeto" arrow>
+                <Button
+                  className={classes.button}
+                  onClick={RemoveEditLayer}
+                  color={activeAction.remove ? 'primary' : 'default'}
+                >
+                  <FontAwesomeIcon icon={faTrashAlt} size="lg" />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Guardar" arrow onClick={saveEditLayer}>
+                <Button className={classes.button}>
+                  <FontAwesomeIcon icon={faSave} size="lg" />
+                </Button>
+              </Tooltip>
+            </>
+          )}
           <Tooltip title="Cerrar edición" arrow>
             <Button
               className={classes.button}

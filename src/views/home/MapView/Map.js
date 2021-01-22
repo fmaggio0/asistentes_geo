@@ -13,7 +13,6 @@ import MeasureTool from 'src/components/GisTools/MeasureTool';
 import CoordinatesTool from 'src/components/GisTools/CoordinatesTool';
 import RightPanel from 'src/components/RightPanel/index';
 import { MapProvider } from '../../../contexts/MapContext';
-import { withStyles } from '@material-ui/core/styles';
 import EditTool from 'src/components/GisTools/EditTool';
 
 // store the map configuration properties in an object.
@@ -122,46 +121,8 @@ const Map = props => {
   }, []);
 
   useEffect(() => {
-    if (map) {
-      addGeoJSONLayer(lotes, 'lotes');
-    }
+    if (map) addGeoJSONLayer(lotes, 'lotes');
   }, [map]);
-
-  /*componentDidMount() {
-    // code to run just after the component "mounts" / DOM elements are created
-    // we could make an AJAX request for the GeoJSON data here if it wasn't stored locally
-    getData();
-    // create the Leaflet map object
-    if (!state.map) init(_mapNode);
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    console.log(prevState);
-    if (prevState.vectorLayers !== state.vectorLayers) {
-      console.log('cambio:', state.vectorLayers);
-    }
-    //console.log(prevProps);
-    // code to run when the component receives new props or state
-    // check to see if geojson is stored, map is created, and geojson overlay needs to be added
-    if (state.geojson && state.map && !state.geojsonLayer) {
-      // add the geojson overlay
-      addGeoJSONLayer(state.geojson, 'lotes');
-    }
-  }
-
-  componentWillUnmount() {
-    // code to run just before unmounting the component
-    // this destroys the Leaflet map object & related event listeners
-    //state.map.remove();
-  }*/
-
-  /*const getData = () => {
-    // could also be an AJAX request that results in setting state with the geojson data
-    // for simplicity sake we are just importing the geojson data using webpack's json loader
-    setState({
-      geojson: lotes
-    });
-  };*/
 
   const cursorOnMap = type => {
     if (type) setCursor(type);
@@ -190,21 +151,6 @@ const Map = props => {
     };
 
     setVectorLayers([...vectorLayers, layer1]);
-    //console.log(layer);
-    //setState({ ...state, prueba: layer });
-
-    // store the Leaflet GeoJSON layer in our component state for use later
-    //let copy = [...state.vectorLayers];
-    /*setState({
-      geojsonLayer: geojsonLayer.toGeoJSON(),
-      vectorLayers: [...state.vectorLayers, layer1]
-    });*/
-
-    /*const currentScores = state.vectorLayers;
-    const newScores = currentScores.concat(layer);
-    setState({ vectorLayers: newScores }, function() {
-      console.log(state.vectorLayers);
-    });*/
 
     // fit the geographic extent of the GeoJSON layer within the map's bounds / viewport
     zoomToFeature(geojsonLayer);
@@ -217,9 +163,15 @@ const Map = props => {
 
   const onEachFeatureClosure = groupName => {
     const onEachFeature = (feature, layer) => {
+      console.log(feature);
       layer.on('click', e => {
         select(e.target);
       });
+
+      //Ver como se cargarán estilos
+      if (feature.styles) {
+        layer.setStyle(feature.styles);
+      }
 
       //Only Fields
       if (groupName === 'lotes') {
@@ -266,72 +218,61 @@ const Map = props => {
     }
   };
 
-  const enableEditTool = (editlayer, contextlayer, featureGroup) => {
-    /*setState(prevState => ({
-      editTool: {
-        ...prevState.editTool,
-        isActive: true,
-        featureGroup: featureGroup,
-        editLayer: editlayer,
-        contextLayer: contextlayer
-      }
-    }));*/
+  const enableEditTool = (editlayer, contextlayer, groupName, advancedEdit) => {
     setEditTool({
       isActive: true,
-      featureGroup: featureGroup,
+      groupName: groupName,
       editLayer: editlayer,
-      contextLayer: contextlayer
+      contextLayer: contextlayer,
+      advancedEdit: advancedEdit
     });
   };
 
   const disableEditTool = () => {
-    /*setState(prevState => ({
-      editTool: {
-        ...prevState.editTool,
-        isActive: false,
-        featureGroup: null,
-        editLayer: null,
-        contextLayer: null
-      }
-    }));*/
     setEditTool({
       isActive: false,
-      featureGroup: null,
+      groupName: null,
       editLayer: null,
-      contextLayer: null
+      contextLayer: null,
+      advancedEdit: false
     });
   };
 
-  const saveEditTool = (properties, style) => {
-    //console.log('saveedittol');
-    editToolRef.current.saveEditLayer(properties, style);
+  const saveEditTool = (properties, style, groupName) => {
+    /*console.log('saveedittol');
+    let result = editToolRef.current.saveEditLayer();
+    console.log(result);*/
   };
 
   const setResultEditTool = data => {
-    data.forEach(element => {
-      let found = vectorLayers.find(e => e.name === element.type);
-      if (found) {
-        if (element.operation === 'create') {
-          found.layer.addData(element.geojson);
-        }
-        if (element.operation === 'update') {
-          found.layer.removeLayer(found.layer.getLayer(element.id));
-          found.layer.addData(element.geojson);
-        }
-        if (element.operation === 'remove') {
-          found.layer.removeLayer(found.layer.getLayer(element.id));
-        }
-      } else {
-        if (element.operation === 'create' && !found) {
-          addGeoJSONLayer(element.geojson, element.type, element.styles);
-        }
+    let found = vectorLayers.find(e => e.name === data.type);
+    if (found) {
+      if (data.operation === 'create') {
+        found.layer.addData(data.geojson);
       }
-    });
+      if (data.operation === 'update') {
+        found.layer.addData(data.geojson);
+        found.layer.removeLayer(found.layer.getLayer(data.id));
+      }
+      if (data.operation === 'remove') {
+        found.layer.removeLayer(found.layer.getLayer(data.id));
+      }
+    } else {
+      if (data.operation === 'create') {
+        addGeoJSONLayer(data.geojson, data.type, data.styles);
+      }
+    }
+
     setSelected(null);
   };
 
   const getResultEditTool = () => {
     return editTool.result;
+  };
+
+  const removeLayerById = (leafletId, groupName) => {
+    let found = vectorLayers.find(e => e.name === groupName);
+    if (found) found.layer.removeLayer(found.layer.getLayer(leafletId));
   };
 
   const removeVectorGroup = groupName => {
@@ -348,48 +289,6 @@ const Map = props => {
     }
   };
 
-  /*
-  init(id) {
-    if (state.map) return;
-
-    let map = L.map(id, config.params);
-    //L.control.zoom({ position: 'bottomleft' }).addTo(map);
-    //L.control.scale({ position: 'bottomleft' }).addTo(map);
-
-    // a TileLayer is used as the "basemap"
-    const tileLayer = L.tileLayer(
-      config.tileLayer.uri,
-      config.tileLayer.params
-    ).addTo(map);
-
-    map.measureTool = L.layerGroup().addTo(map);
-
-    //Zoom at level 12
-    let tooltipThreshold = 14;
-    map.on('zoomend', () => {
-      let zoom = map.getZoom();
-      let lastZoom;
-      if (state.lastZoom) lastZoom = state.lastZoom;
-      else lastZoom = map.getZoom();
-
-      if (
-        zoom < tooltipThreshold &&
-        (!lastZoom || lastZoom >= tooltipThreshold)
-      ) {
-        map.getPane('tooltipPane').style.display = 'none';
-      } else if (
-        zoom >= tooltipThreshold &&
-        (!lastZoom || lastZoom < tooltipThreshold)
-      ) {
-        map.getPane('tooltipPane').style.display = 'block';
-      }
-      setState({ lastZoom: zoom });
-    });
-
-    // set our state to include the tile layer
-    setState({ map, tileLayer });
-  }*/
-
   return (
     <div id="mapUI">
       <MapProvider
@@ -399,7 +298,9 @@ const Map = props => {
           cursorOnMap,
           removeVectorGroup,
           saveEditTool,
-          disableEditTool
+          disableEditTool,
+          removeLayerById,
+          setResultEditTool
         }}
       >
         <RightPanel />
@@ -410,16 +311,15 @@ const Map = props => {
           <EditTool
             editLayer={editTool.editLayer}
             contextLayer={editTool.contextLayer}
-            featureGroup={editTool.featureGroup}
-            result={setResultEditTool}
+            groupName={editTool.groupName}
+            //result={setResultEditTool}
             unmountMe={disableEditTool}
-            //ref={ref => (editToolRef = ref)}
             ref={editToolRef}
+            advancedEdit={editTool.advancedEdit}
           />
         )}
       </MapProvider>
       <div
-        //ref={node => (_mapNode = node)}
         id="map"
         className={classes.map}
         style={cursor ? { cursor: cursor } : {}}

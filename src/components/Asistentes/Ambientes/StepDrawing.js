@@ -72,16 +72,19 @@ export default props => {
     /*let context2 = mapContext.state.vectorLayers.find(
       e => e.name === groupName
     );*/
-    setAmbiente(event.target.value);
+    let properties = event.target.value;
+    setAmbiente(properties);
 
-    mapContext.saveEditTool(event.target.value, {
-      fillColor: '#000000',
-      weight: 1,
-      opacity: 1,
-      color: '#000000',
-      fillOpacity: 0,
-      dashArray: 0
-    });
+    mapContext.saveEditTool(
+      properties,
+      {
+        fillColor: properties.color,
+        opacity: 1,
+        color: properties.color,
+        fillOpacity: 0.8
+      },
+      groupName
+    );
   };
 
   const handleChangeNotas = event => {
