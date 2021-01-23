@@ -163,7 +163,7 @@ const Map = props => {
 
   const onEachFeatureClosure = groupName => {
     const onEachFeature = (feature, layer) => {
-      console.log(feature);
+      //console.log(feature);
       layer.on('click', e => {
         select(e.target);
       });
@@ -239,9 +239,8 @@ const Map = props => {
   };
 
   const saveEditTool = (properties, style, groupName) => {
-    /*console.log('saveedittol');
-    let result = editToolRef.current.saveEditLayer();
-    console.log(result);*/
+    /*console.log('saveedittol');*/
+    editToolRef.current.saveEditLayer(properties, style);
   };
 
   const setResultEditTool = data => {

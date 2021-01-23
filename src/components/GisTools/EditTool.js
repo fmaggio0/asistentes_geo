@@ -145,9 +145,15 @@ const EditTool = forwardRef((props, ref) => {
 
   useEffect(() => {
     if (editLayer) {
+      console.log(contextLayer.toGeoJSON());
+      console.log(contextLayer);
+      console.log(editLayer);
       if (contextLayer.hasLayer(editLayer)) {
         let diff = contextLayer.removeLayer(editLayer).toGeoJSON();
+        console.log(editLayer.toGeoJSON());
+        console.log(diff);
         if (diff.features.length > 0) {
+          console.log('entro');
           setContextLayerLessEditLayer(diff);
         }
         contextLayer.addLayer(editLayer);
@@ -401,11 +407,15 @@ const EditTool = forwardRef((props, ref) => {
     props.unmountMe();
   };
 
-  const saveEditLayer = () => {
+  const saveEditLayer = (properties, styles) => {
     if (editableLayer) {
       let resultGeoJson = editableLayer.toGeoJSON();
-      if (editLayerInfo.properties)
-        resultGeoJson.properties = editLayerInfo.properties;
+      resultGeoJson = geometryCheck(resultGeoJson);
+      if (properties) resultGeoJson.properties = properties;
+      else resultGeoJson.properties = editLayerInfo.properties;
+      if (styles) resultGeoJson.styles = styles;
+
+      console.log(resultGeoJson);
 
       let result = {
         id: editLayer ? editLayer._leaflet_id : null,
@@ -420,19 +430,6 @@ const EditTool = forwardRef((props, ref) => {
 
     props.unmountMe();
   };
-
-  /*const saveEditLayer2 = () => {
-    if (editableLayer) {
-      let resultGeoJson = editableLayer.toGeoJSON();
-      if (editLayerInfo.properties)
-        resultGeoJson.properties = editLayerInfo.properties;
-
-      props.unmountMe();
-      return resultGeoJson;
-    }
-
-    props.unmountMe();
-  };*/
 
   const RemoveEditLayer = () => {
     mapContext.cursorOnMap('pointer');
@@ -854,7 +851,7 @@ const EditTool = forwardRef((props, ref) => {
                   <FontAwesomeIcon icon={faTrashAlt} size="lg" />
                 </Button>
               </Tooltip>
-              <Tooltip title="Guardar" arrow onClick={saveEditLayer}>
+              <Tooltip title="Guardar" arrow onClick={() => saveEditLayer()}>
                 <Button className={classes.button}>
                   <FontAwesomeIcon icon={faSave} size="lg" />
                 </Button>
