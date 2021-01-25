@@ -69,14 +69,18 @@ const Map = props => {
   const [map, setMap] = useState(null);
   const [tileLayer, setTileLayer] = useState(null);
   const [vectorLayers, setVectorLayers] = useState([]);
-  const [selected, setSelected, selectedRef] = useStateRef(null);
-  const [editSelected, setEditSelected] = useState(null);
+  const [selected, setSelected, selectedRef] = useStateRef({
+    isActive: true,
+    layer: null
+  });
   const [cursor, setCursor] = useState(null);
   const [lastZoom, setLastZoom] = useState(null);
   const [editTool, setEditTool] = useState({
     isActive: false,
     editLayer: null,
     contextLayer: null,
+    properties: null,
+    styles: null,
     result: null
   });
   const editToolRef = useRef();
@@ -193,36 +197,51 @@ const Map = props => {
   const highlight = layer => {
     layer.setStyle(styleSelected);
     layer.options.highlight = true;
-    setSelected(layer);
+    setSelected({ ...selected, layer: layer });
   };
 
   const dehighlight = layer => {
     layer.setStyle(styleEmpty);
     layer.options.highlight = false;
-    setSelected(null);
+    setSelected({ ...selected, layer: null });
   };
 
   const select = layer => {
+    if (selectedRef.current.isActive === false) return;
+
     let previous;
-    if (selectedRef.current !== null) {
-      previous = selectedRef.current;
+    if (selectedRef.current.layer !== null) {
+      previous = selectedRef.current.layer;
     }
     map.fitBounds(layer.getBounds());
     if (previous && previous !== layer) {
       dehighlight(previous);
       highlight(layer);
-    } else if (selectedRef.current === layer) {
+    } else if (selectedRef.current.layer === layer) {
       dehighlight(previous);
     } else {
       highlight(layer);
     }
   };
 
-  const enableEditTool = (editlayer, contextlayer, groupName, advancedEdit) => {
+  const toggleSelected = status => {
+    setSelected({ ...selected, isActive: status });
+  };
+
+  const enableEditTool = (
+    editlayer,
+    contextlayer,
+    groupName,
+    advancedEdit,
+    properties,
+    styles
+  ) => {
     setEditTool({
       isActive: true,
       groupName: groupName,
       editLayer: editlayer,
+      properties: properties,
+      styles: styles,
       contextLayer: contextlayer,
       advancedEdit: advancedEdit
     });
@@ -233,14 +252,16 @@ const Map = props => {
       isActive: false,
       groupName: null,
       editLayer: null,
+      properties: null,
+      styles: null,
       contextLayer: null,
       advancedEdit: false
     });
   };
 
-  const saveEditTool = (properties, style, groupName) => {
-    /*console.log('saveedittol');*/
-    editToolRef.current.saveEditLayer(properties, style);
+  const saveEditTool = (properties, style) => {
+    if (editToolRef.current)
+      editToolRef.current.saveEditLayer(properties, style);
   };
 
   const setResultEditTool = data => {
@@ -262,7 +283,7 @@ const Map = props => {
       }
     }
 
-    setSelected(null);
+    setSelected({ ...selected, layer: null });
   };
 
   const getResultEditTool = () => {
@@ -299,7 +320,8 @@ const Map = props => {
           saveEditTool,
           disableEditTool,
           removeLayerById,
-          setResultEditTool
+          setResultEditTool,
+          toggleSelected
         }}
       >
         <RightPanel />

@@ -54,7 +54,7 @@ const RightPanel = props => {
   const mapContext = useContext(MapContext);
 
   const toggleEditTool = () => {
-    let editlayer = mapContext.state.selected;
+    let editlayer = mapContext.state.selected.layer;
     let contextlayer = mapContext.state.vectorLayers.find(
       element => element.name === 'lotes'
     ).layer;

@@ -29,13 +29,6 @@ export default props => {
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
-    /*let editlayer = null;
-    let bbox = turf.bbox(lote.toGeoJSON());
-    let bboxPolygon = turf.bboxPolygon(bbox);
-    let buffered = turf.buffer(bboxPolygon, 500, { units: 'meters' });
-    let bboxWithDifference = turf.difference(buffered, lote.toGeoJSON());
-    let contextLayer = L.GeoJSON.geometryToLayer(bboxWithDifference);
-    mapContext.enableEditTool(editlayer, contextLayer, 'drawAmbientes');*/
     setAmbiente(ambientes.properties[0]);
     return () => {
       // unmount
@@ -58,15 +51,13 @@ export default props => {
 
       //generate context layer
       let context = lote.toGeoJSON();
-      let context2 = mapContext.state.vectorLayers.find(
-        e => e.name === groupName
-      );
       let bbox = turf.bbox(context);
       let bboxPolygon = turf.bboxPolygon(bbox);
-      let buffered = turf.buffer(bboxPolygon, 500, { units: 'meters' });
+      let buffered = turf.buffer(bboxPolygon, 1000, { units: 'meters' });
       let bboxWithDifference = turf.difference(buffered, context);
-      if (context2) {
-        context2 = context2.layer.toGeoJSON();
+      if (foundLayerGroup) {
+        if (lastLayer) foundLayerGroup.layer.removeLayer(lastLayer);
+        let context2 = foundLayerGroup.layer.toGeoJSON();
         bboxWithDifference = turf.union(
           ...context2.features,
           bboxWithDifference
@@ -83,16 +74,12 @@ export default props => {
 
   const handleChange = event => {
     setAmbiente(event.target.value);
-    mapContext.saveEditTool(
-      ambiente,
-      {
-        fillColor: ambiente.color,
-        opacity: 1,
-        color: ambiente.color,
-        fillOpacity: 0.8
-      },
-      groupName
-    );
+    mapContext.saveEditTool(ambiente, {
+      fillColor: ambiente.color,
+      opacity: 1,
+      color: ambiente.color,
+      fillOpacity: 0.8
+    });
   };
 
   const handleChangeNotas = event => {

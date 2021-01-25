@@ -145,15 +145,15 @@ const EditTool = forwardRef((props, ref) => {
 
   useEffect(() => {
     if (editLayer) {
-      console.log(contextLayer.toGeoJSON());
-      console.log(contextLayer);
-      console.log(editLayer);
+      //console.log(contextLayer.toGeoJSON());
+      //console.log(contextLayer);
+      //console.log(editLayer);
       if (contextLayer.hasLayer(editLayer)) {
         let diff = contextLayer.removeLayer(editLayer).toGeoJSON();
-        console.log(editLayer.toGeoJSON());
-        console.log(diff);
+        //console.log(editLayer.toGeoJSON());
+        //console.log(diff);
         if (diff.features.length > 0) {
-          console.log('entro');
+          //console.log('entro');
           setContextLayerLessEditLayer(diff);
         }
         contextLayer.addLayer(editLayer);
@@ -168,10 +168,12 @@ const EditTool = forwardRef((props, ref) => {
     } else {
       setContextLayerLessEditLayer(contextLayer.toGeoJSON());
     }
+    mapContext.toggleSelected(false);
 
     return () => {
       mapContext.state.map.editTools.featuresLayer.clearLayers();
       mapContext.state.map.editTools.stopDrawing();
+      mapContext.toggleSelected(true);
       mapContext.cursorOnMap();
     };
   }, []);
@@ -415,7 +417,7 @@ const EditTool = forwardRef((props, ref) => {
       else resultGeoJson.properties = editLayerInfo.properties;
       if (styles) resultGeoJson.styles = styles;
 
-      console.log(resultGeoJson);
+      //console.log(resultGeoJson);
 
       let result = {
         id: editLayer ? editLayer._leaflet_id : null,
@@ -861,7 +863,9 @@ const EditTool = forwardRef((props, ref) => {
           <Tooltip title="Cerrar edición" arrow>
             <Button
               className={classes.button}
-              onClick={() => props.unmountMe()}
+              onClick={() =>
+                !advancedEdit ? saveEditLayer() : props.unmountMe()
+              }
             >
               <FontAwesomeIcon icon={faTimes} size="lg" />
             </Button>

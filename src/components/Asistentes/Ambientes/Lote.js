@@ -32,11 +32,13 @@ export default props => {
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
-    if (mapContext.state.selected) {
-      setSelectLayerName(mapContext.state.selected.feature.properties.Field);
-      props.onChangeLote(mapContext.state.selected);
+    if (mapContext.state.selected.layer) {
+      setSelectLayerName(
+        mapContext.state.selected.layer.feature.properties.Field
+      );
+      props.onChangeLote(mapContext.state.selected.layer);
     }
-  }, [mapContext.state.selected]);
+  }, [mapContext.state.selected.layer]);
 
   return (
     <div>
