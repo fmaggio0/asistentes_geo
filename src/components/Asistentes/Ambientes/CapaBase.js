@@ -5,22 +5,6 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import MapContext from 'src/contexts/MapContext';
 import dataCapaBase from 'src/data/capasbase.json';
-import L from 'leaflet';
-
-function onEachFeature(feature, layer) {
-  if (feature.properties) {
-    layer.bindTooltip(
-      function(layer) {
-        return (
-          '<pre>' +
-          JSON.stringify(feature.properties, null, ' ').replace(/[{}"]/g, '') +
-          '</pre>'
-        );
-      },
-      { opacity: 0.75, offset: [0, -5], direction: 'top', sticky: true } //then add your options
-    );
-  }
-}
 
 const baseLayers = [
   { id: 1, name: 'mp: L 20 quantile 5' },

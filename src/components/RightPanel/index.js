@@ -79,7 +79,7 @@ const RightPanel = props => {
           className={classes.button}
           style={{ borderRadius: 0 }}
           onClick={toggleEditTool}
-          //disabled={!mapContext.state.selected}
+          disabled={!mapContext.state.selected.layer}
         >
           <FontAwesomeIcon icon={faPen} />
         </Button>

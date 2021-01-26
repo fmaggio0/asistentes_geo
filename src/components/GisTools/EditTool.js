@@ -96,7 +96,7 @@ const useStyles = makeStyles(theme => ({
 const EditTool = forwardRef((props, ref) => {
   var useStateRef = require('react-usestateref');
   const classes = useStyles();
-  const [activeAction, setActiveAction, activeActionRef] = useStateRef({
+  const [activeAction, setActiveAction] = useState({
     drawSquare: false,
     drawCircle: false,
     drawPolygon: false,

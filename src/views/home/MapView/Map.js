@@ -195,12 +195,14 @@ const Map = props => {
   };
 
   const highlight = layer => {
+    console.log('highlight');
     layer.setStyle(styleSelected);
     layer.options.highlight = true;
     setSelected({ ...selected, layer: layer });
   };
 
   const dehighlight = layer => {
+    console.log('dehighlight');
     layer.setStyle(styleEmpty);
     layer.options.highlight = false;
     setSelected({ ...selected, layer: null });
@@ -225,7 +227,7 @@ const Map = props => {
   };
 
   const toggleSelected = status => {
-    setSelected({ ...selected, isActive: status });
+    setSelected({ ...selectedRef.current, isActive: status });
   };
 
   const enableEditTool = (
@@ -282,13 +284,8 @@ const Map = props => {
         addGeoJSONLayer(data.geojson, data.type, data.styles);
       }
     }
-
     setSelected({ ...selected, layer: null });
   };
-
-  /*const getResultEditTool = () => {
-    return editTool.result;
-  };*/
 
   const removeLayerById = (leafletId, groupName) => {
     let found = vectorLayers.find(e => e.name === groupName);

@@ -26,8 +26,8 @@ import MapContext from '../../../contexts/MapContext';
 const useStyles = makeStyles(theme => ({
   root: {
     position: 'absolute',
-    right: '10px',
-    top: '10px',
+    right: '50px',
+    top: '20px',
     zIndex: 1000,
     width: '300px',
     height: '600px',

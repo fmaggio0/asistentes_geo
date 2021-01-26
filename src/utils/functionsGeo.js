@@ -1,5 +1,4 @@
 import * as turf from '@turf/turf';
-import geojsonhint from '@mapbox/geojsonhint';
 
 export function convertDegToDms(dd, longOrLat) {
   let hemisphere = /^[WE]|(?:lon)/i.test(longOrLat)
@@ -34,7 +33,7 @@ export function convertDmsToDeg(dms) {
     Number(seconds) / 3600
   ).toFixed(6);
 
-  if (direction == 'S' || direction == 'W') {
+  if (direction === 'S' || direction === 'W') {
     deg = deg * -1;
   } // Don't do anything for N or E
   return deg;
@@ -105,8 +104,6 @@ export function geometryCheck(geom) {
     if (turf.area(geom) < 100)
       throw 'La geometria debe tener como minimo 100mts2.';
 
-    //console.log(geojsonhint.hint(geom));
-
     return geom;
   } catch (e) {
     console.log(e);
@@ -134,11 +131,11 @@ export function unionAll(drawGeom, defaultGeom) {
 }
 
 export function cutAll(drawGeom, defaultGeom) {
-  var count = 0;
+  /*var count = 0;
   var cantgeom = 0;
   turf.flattenEach(defaultGeom, function(currentFeature) {
     cantgeom++;
-    if (drawGeom.geometry.type == 'MultiPolygon') {
+    if (drawGeom.geometry.type === 'MultiPolygon') {
       turf.flattenEach(drawGeom, function(currentFeatureDraw) {
         if (turf.booleanContains(currentFeatureDraw, currentFeature)) {
           count++;
@@ -151,7 +148,7 @@ export function cutAll(drawGeom, defaultGeom) {
     }
   });
 
-  /*if (count == cantgeom) {
+  if (count == cantgeom) {
     //eliminar todo
     map.editTools.featuresLayer.clearLayers();
     return;
@@ -168,7 +165,7 @@ export function unify(polyList) {
     featureIndex,
     multiFeatureIndex
   ) {
-    if (multiFeatureIndex == 0) {
+    if (multiFeatureIndex === 0) {
       unionTemp = currentFeature;
     } else {
       unionTemp = turf.union(unionTemp, currentFeature);
@@ -187,7 +184,7 @@ export function checkForIntersections(drawGeom, contextGeom) {
 export function polygonCut(polygon, line) {
   const THICK_LINE_UNITS = 'kilometers';
   const THICK_LINE_WIDTH = 0.0001;
-  var i, j, id, intersectPoints, lineCoords, forCut, forSelect;
+  var i, j, intersectPoints, lineCoords, forCut, forSelect;
   var thickLineString, thickLinePolygon, clipped, polyg, intersect;
   var polyCoords = [];
   var cutPolyGeoms = [];
@@ -196,18 +193,18 @@ export function polygonCut(polygon, line) {
   var retVal = null;
 
   if (
-    (polygon.type != 'Polygon' && polygon.type != 'MultiPolygon') ||
-    line.type != 'LineString'
+    (polygon.type !== 'Polygon' && polygon.type !== 'MultiPolygon') ||
+    line.type !== 'LineString'
   ) {
     return retVal;
   }
 
   intersectPoints = turf.lineIntersect(polygon, line);
-  if (intersectPoints.features.length == 0) {
+  if (intersectPoints.features.length === 0) {
     return retVal;
   }
 
-  var lineCoords = turf.getCoords(line);
+  lineCoords = turf.getCoords(line);
   if (
     turf.booleanWithin(turf.point(lineCoords[0]), polygon) ||
     turf.booleanWithin(turf.point(lineCoords[lineCoords.length - 1]), polygon)
