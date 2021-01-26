@@ -286,9 +286,9 @@ const Map = props => {
     setSelected({ ...selected, layer: null });
   };
 
-  const getResultEditTool = () => {
+  /*const getResultEditTool = () => {
     return editTool.result;
-  };
+  };*/
 
   const removeLayerById = (leafletId, groupName) => {
     let found = vectorLayers.find(e => e.name === groupName);
@@ -321,7 +321,8 @@ const Map = props => {
           disableEditTool,
           removeLayerById,
           setResultEditTool,
-          toggleSelected
+          toggleSelected,
+          addGeoJSONLayer
         }}
       >
         <RightPanel />

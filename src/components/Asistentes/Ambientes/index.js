@@ -69,6 +69,7 @@ const Ambientes = props => {
     return () => {
       // unmount
       mapContext.removeVectorGroup('ambientes_capa_base');
+      mapContext.toggleSelected(true);
     };
   }, []);
 
@@ -152,22 +153,11 @@ const Ambientes = props => {
 
             {step === 'setAmbienteDrawing' && (
               <>
-                <StepDrawing ambientes={tipoZona} lote={lote} />
-                <Box my={2} display="flex" justifyContent="space-between">
-                  <Button
-                    onClick={() => setStep('init')}
-                    disabled={step === 'init'}
-                  >
-                    Atras
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={nextStep}
-                  >
-                    Siguiente
-                  </Button>
-                </Box>
+                <StepDrawing
+                  ambientes={tipoZona}
+                  lote={lote}
+                  onUpdateStep={onUpdateStep}
+                />
               </>
             )}
 

@@ -858,18 +858,17 @@ const EditTool = forwardRef((props, ref) => {
                   <FontAwesomeIcon icon={faSave} size="lg" />
                 </Button>
               </Tooltip>
+
+              <Tooltip title="Cerrar edición" arrow>
+                <Button
+                  className={classes.button}
+                  onClick={() => props.unmountMe()}
+                >
+                  <FontAwesomeIcon icon={faTimes} size="lg" />
+                </Button>
+              </Tooltip>
             </>
           )}
-          <Tooltip title="Cerrar edición" arrow>
-            <Button
-              className={classes.button}
-              onClick={() =>
-                !advancedEdit ? saveEditLayer() : props.unmountMe()
-              }
-            >
-              <FontAwesomeIcon icon={faTimes} size="lg" />
-            </Button>
-          </Tooltip>
         </Box>
       </Box>
     </>

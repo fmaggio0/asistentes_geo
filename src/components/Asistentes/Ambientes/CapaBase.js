@@ -55,13 +55,8 @@ export default props => {
     //Axios api call para traer geometrias de la capa base
     if (selectedBaseLayer) {
       mapContext.addGeoJSONLayer(dataCapaBase, 'ambientes_capa_base');
-      /*var capabase = new L.GeoJSON(dataCapaBase, {
-        onEachFeature: onEachFeature
-      });
-      capabase.addTo(mapContext.state.map);
-      mapContext.state.map.baseLayer = capabase;*/
+      mapContext.toggleSelected(false);
     }
-    // eslint-disable-next-line
   }, [selectedBaseLayer]);
 
   return (
