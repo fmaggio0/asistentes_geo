@@ -6,7 +6,7 @@ import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import MapContext from '../../../contexts/MapContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHandPointer } from '@fortawesome/pro-light-svg-icons';
+import { faMousePointer } from '@fortawesome/pro-light-svg-icons';
 
 const useStyles = makeStyles(theme360 => ({
   selectLayerButton: {
@@ -36,6 +36,8 @@ export default props => {
         mapContext.state.selected.layer.feature.properties.Field
       );
       props.onChangeLote(mapContext.state.selected.layer);
+    } else {
+      setSelectLayerName('');
     }
   }, [mapContext.state.selected.layer]);
 
@@ -48,10 +50,11 @@ export default props => {
       </Box>
 
       <Box component="div" className={classes.boxSelect}>
-        <IconButton className={classes.iconButton} aria-label="menu">
-          <FontAwesomeIcon icon={faHandPointer} />
-        </IconButton>
-
+        <FontAwesomeIcon
+          icon={faMousePointer}
+          size={'1x'}
+          style={{ marginRight: 10 }}
+        />
         <TextField
           size="small"
           className={classes.layerName}

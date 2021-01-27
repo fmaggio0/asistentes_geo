@@ -11,6 +11,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPalette, faCircle } from '@fortawesome/pro-solid-svg-icons';
 
@@ -141,12 +142,13 @@ export default props => {
   }, []);
 
   return (
-    <div>
-      <Box mt={2}>
+    <Grid container className={classes.root}>
+      <Grid item xs={12}>
         <Typography component="label" variant="subtitle2">
           Tipo de zona
         </Typography>
-        {/*<IconButton aria-label="plus">
+      </Grid>
+      {/*<IconButton aria-label="plus">
           <Icon
             fontSize="small"
             style={{ color: '#4A4A49' }}
@@ -160,51 +162,54 @@ export default props => {
             className="fa fa-xs fa-pen"
           />
         </IconButton>*/}
-      </Box>
-      <Select
-        style={{ minWidth: '100%' }}
-        onChange={handleChange}
-        value={typeSelected}
-      >
-        {typeZones &&
-          typeZones.map(row => (
-            <MenuItem value={row} key={row.id}>
-              {row.name}
-            </MenuItem>
-          ))}
-      </Select>
+      <Grid item xs={12}>
+        <Select
+          style={{ minWidth: '100%' }}
+          onChange={handleChange}
+          value={typeSelected}
+        >
+          {typeZones &&
+            typeZones.map(row => (
+              <MenuItem value={row} key={row.id}>
+                {row.name}
+              </MenuItem>
+            ))}
+        </Select>
+      </Grid>
 
       {typeSelected.properties && (
-        <TableContainer component={Paper} style={{ marginTop: '20px' }}>
-          <Table className={classes.table} size="small">
-            <TableHead className={classes.header}>
-              <TableRow>
-                {headers.map((header, index) => (
-                  <TableCell align="center" key={index}>
-                    {header}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row, index) => (
-                <TableRow key={index}>
-                  {row.map((cell, i) => (
-                    <TableCell
-                      component="td"
-                      scope="row"
-                      align="center"
-                      key={i}
-                    >
-                      {cell}
+        <Grid item xs={12}>
+          <TableContainer component={Paper} style={{ marginTop: '20px' }}>
+            <Table className={classes.table} size="small">
+              <TableHead className={classes.header}>
+                <TableRow>
+                  {headers.map((header, index) => (
+                    <TableCell align="center" key={index}>
+                      {header}
                     </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {rows.map((row, index) => (
+                  <TableRow key={index}>
+                    {row.map((cell, i) => (
+                      <TableCell
+                        component="td"
+                        scope="row"
+                        align="center"
+                        key={i}
+                      >
+                        {cell}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
       )}
-    </div>
+    </Grid>
   );
 };

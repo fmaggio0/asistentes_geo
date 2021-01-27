@@ -6,8 +6,10 @@ import Lote from './Lote';
 import Modalidad from './Modalidad';
 import TipoZona from './TipoZona';
 import CapaBase from './CapaBase';
-import StepCapaBase from './StepCapaBase';
-import StepDrawing from './StepDrawing';
+import StepByCapaBase from './StepByCapaBase';
+import StepByDrawing from './StepByDrawing';
+import StepInit from './StepInit';
+import StepSecond from './StepSecond';
 
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -17,8 +19,13 @@ import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import MobileStepper from '@material-ui/core/MobileStepper';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle } from '@fortawesome/pro-regular-svg-icons';
+import {
+  faTimesCircle,
+  faArrowRight,
+  faArrowLeft
+} from '@fortawesome/pro-regular-svg-icons';
 
 //Context
 import MapContext from '../../../contexts/MapContext';
@@ -52,8 +59,8 @@ const useStyles = makeStyles(theme => ({
 
 const Ambientes = props => {
   const classes = useStyles();
-  const [step, setStep] = useState('init');
-  const [capa, setCapa] = useState('');
+  //const [step, setStep] = useState('init');
+  /*const [capa, setCapa] = useState('');
   const handlerCapa = value => setCapa(value);
   const [lote, setLote] = useState('');
   const handlerLote = value => setLote(value);
@@ -62,8 +69,16 @@ const Ambientes = props => {
   const [capabase, setCapabase] = useState('');
   const handlerCapabase = value => setCapabase(value);
   const [tipoZona, setTipoZona] = useState('');
-  const handlerTipoZona = value => setTipoZona(value);
+  const handlerTipoZona = value => setTipoZona(value);*/
   const mapContext = useContext(MapContext);
+  const [activeStep, setActiveStep] = useState(0);
+  const [sharedData, setSharedData] = useState({
+    layerName: null,
+    field: null,
+    mode: null,
+    tipoZona: null
+  });
+  const [disableNext, setDisableNext] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -73,19 +88,36 @@ const Ambientes = props => {
     };
   }, []);
 
-  const nextStep = () => {
-    if (modalidad === 'layer') {
-      setStep('setAmbienteCapaBase');
-    }
-
-    if (modalidad === 'drawing') {
-      setStep('setAmbienteDrawing');
-    }
+  const handleNext = () => {
+    setActiveStep(prevActiveStep => prevActiveStep + 1);
   };
 
-  const onUpdateStep = step => {
-    setStep(step);
+  const handleBack = () => {
+    setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
+
+  const handleSharedData = data => {
+    setSharedData({
+      ...sharedData,
+      layerName: data.layerName || sharedData.layerName,
+      field: data.field || sharedData.field,
+      mode: data.mode || sharedData.mode,
+      baseLayer: data.baseLayer || sharedData.baseLayer,
+      tipoZona: data.tipoZona || sharedData.tipoZona
+    });
+  };
+
+  useEffect(() => {
+    console.log(sharedData);
+  }, [sharedData]);
+
+  /*const handleDisableNext = () => {
+    if (activeStep === 2) {
+      return true;
+    }
+
+    return false;
+  };*/
 
   return (
     <Card id="ambientes" className={classes.root}>
@@ -108,72 +140,66 @@ const Ambientes = props => {
       <CardContent className={classes.cardContent}>
         <PerfectScrollbar options={{ suppressScrollX: true }}>
           <Box m={2}>
-            {step === 'init' && (
-              <>
-                <Capa onChangeCapa={handlerCapa} capa={capa} />
-                <Lote onChangeLote={handlerLote} lote={lote} />
-                <Modalidad
-                  onChangeModalidad={handlerModalidad}
-                  modalidad={modalidad}
-                />
-                {modalidad === 'layer' && (
-                  <CapaBase
-                    onChangeCapabase={handlerCapabase}
-                    capabase={capabase}
-                  />
-                )}
-                {(modalidad === 'drawing' || capabase) && (
-                  <TipoZona
-                    onChangeTipoZona={handlerTipoZona}
-                    tipozona={tipoZona}
-                  />
-                )}
-                <Box
-                  my={2}
-                  display="flex"
-                  justifyContent="space-between"
-                  style={{ float: 'right' }}
-                >
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={nextStep}
-                    disabled={
-                      capa === '' ||
-                      lote === '' ||
-                      modalidad === '' ||
-                      tipoZona === ''
-                    }
-                  >
-                    Siguiente
-                  </Button>
-                </Box>
-              </>
+            {activeStep === 0 && (
+              <StepInit sharedData={handleSharedData} data={sharedData} />
             )}
-
-            {step === 'setAmbienteDrawing' && (
+            {activeStep === 1 && (
+              <StepSecond sharedData={handleSharedData} data={sharedData} />
+            )}
+            {activeStep === 2 && sharedData.mode === 'drawing' && (
               <>
-                <StepDrawing
-                  ambientes={tipoZona}
-                  lote={lote}
-                  onUpdateStep={onUpdateStep}
+                <StepByDrawing
+                  ambientes={sharedData.tipoZona}
+                  lote={sharedData.field}
+                  //onUpdateStep={onUpdateStep}
                 />
               </>
             )}
-
-            {step === 'setAmbienteCapaBase' && (
+            {activeStep === 2 && sharedData.mode === 'layer' && (
               <>
-                <StepCapaBase
-                  ambientes={tipoZona}
+                <StepByCapaBase
+                  ambientes={sharedData.tipoZona}
                   baseLayer={
                     mapContext.state.vectorLayers.find(
                       element => element.name === 'ambientes_capa_base'
                     ).layer
                   }
-                  onUpdateStep={onUpdateStep}
+                  //onUpdateStep={onUpdateStep}
                 />
               </>
             )}
+            <MobileStepper
+              variant="dots"
+              steps={3}
+              position="static"
+              activeStep={activeStep}
+              nextButton={
+                <Button
+                  size="small"
+                  onClick={handleNext}
+                  disabled={disableNext}
+                >
+                  Next
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    style={{ marginLeft: 5 }}
+                  />
+                </Button>
+              }
+              backButton={
+                <Button
+                  size="small"
+                  onClick={handleBack}
+                  disabled={activeStep === 0}
+                >
+                  <FontAwesomeIcon
+                    icon={faArrowLeft}
+                    style={{ marginRight: 5 }}
+                  />
+                  Back
+                </Button>
+              }
+            />
           </Box>
         </PerfectScrollbar>
       </CardContent>

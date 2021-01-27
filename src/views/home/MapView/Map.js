@@ -195,14 +195,12 @@ const Map = props => {
   };
 
   const highlight = layer => {
-    console.log('highlight');
     layer.setStyle(styleSelected);
     layer.options.highlight = true;
     setSelected({ ...selected, layer: layer });
   };
 
   const dehighlight = layer => {
-    console.log('dehighlight');
     layer.setStyle(styleEmpty);
     layer.options.highlight = false;
     setSelected({ ...selected, layer: null });
