@@ -1,23 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 /* Componentes */
-import Capa from './Capa';
-import Lote from './Lote';
-import Modalidad from './Modalidad';
 import TipoZona from './TipoZona';
-import CapaBase from './CapaBase';
 
 import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
 import Typography from '@material-ui/core/Typography';
-import TextField from '@material-ui/core/TextField';
-import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
-import PerfectScrollbar from 'react-perfect-scrollbar';
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -74,10 +62,6 @@ const StepSecond = props => {
       mapContext.toggleSelected(false);
     }
   }, [selectedBaseLayer]);
-
-  const handlerTipoZona = tipoZona => {
-    setTipoZona(tipoZona);
-  };
 
   return (
     <>

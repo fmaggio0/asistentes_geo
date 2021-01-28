@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 /* Componentes */
-import Capa from './Capa';
-import Lote from './Lote';
-import Modalidad from './Modalidad';
-import TipoZona from './TipoZona';
-import CapaBase from './CapaBase';
 import StepByCapaBase from './StepByCapaBase';
 import StepByDrawing from './StepByDrawing';
 import StepInit from './StepInit';
@@ -57,6 +52,14 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const download = (content, fileName, contentType) => {
+  const a = document.createElement('a');
+  const file = new Blob([content], { type: contentType });
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
+};
+
 const Ambientes = props => {
   const classes = useStyles();
   //const [step, setStep] = useState('init');
@@ -72,13 +75,15 @@ const Ambientes = props => {
   const handlerTipoZona = value => setTipoZona(value);*/
   const mapContext = useContext(MapContext);
   const [activeStep, setActiveStep] = useState(0);
+  const [totalStep, setTotalStep] = useState(3);
   const [sharedData, setSharedData] = useState({
     layerName: null,
     field: null,
     mode: null,
-    tipoZona: null
+    tipoZona: null,
+    baseLayer: null,
+    geoJsonResult: null
   });
-  const [disableNext, setDisableNext] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -103,21 +108,45 @@ const Ambientes = props => {
       field: data.field || sharedData.field,
       mode: data.mode || sharedData.mode,
       baseLayer: data.baseLayer || sharedData.baseLayer,
-      tipoZona: data.tipoZona || sharedData.tipoZona
+      tipoZona: data.tipoZona || sharedData.tipoZona,
+      geoJsonResult: data.geoJsonResult || sharedData.geoJsonResult
     });
+  };
+
+  const handleFinish = () => {
+    let result = sharedData.geoJsonResult;
+    if (sharedData.mode === 'drawing') {
+      let foundLayerGroup = mapContext.state.vectorLayers.find(
+        e => e.name === 'drawAmbientes'
+      );
+      result = foundLayerGroup.layer.toGeoJSON();
+    }
+    console.log(result);
+    download(JSON.stringify(result), 'result.geojson', 'text/plain');
+    props.unmountMe();
   };
 
   useEffect(() => {
     console.log(sharedData);
   }, [sharedData]);
 
-  /*const handleDisableNext = () => {
-    if (activeStep === 2) {
-      return true;
+  const handleDisableNext = () => {
+    if (
+      activeStep === 0 &&
+      sharedData.layerName &&
+      sharedData.field &&
+      sharedData.mode
+    ) {
+      return false;
+    } else if (
+      activeStep === 1 &&
+      //sharedData.baseLayer &&
+      sharedData.tipoZona
+    ) {
+      return false;
     }
-
-    return false;
-  };*/
+    return true;
+  };
 
   return (
     <Card id="ambientes" className={classes.root}>
@@ -151,7 +180,7 @@ const Ambientes = props => {
                 <StepByDrawing
                   ambientes={sharedData.tipoZona}
                   lote={sharedData.field}
-                  //onUpdateStep={onUpdateStep}
+                  sharedData={handleSharedData}
                 />
               </>
             )}
@@ -164,27 +193,37 @@ const Ambientes = props => {
                       element => element.name === 'ambientes_capa_base'
                     ).layer
                   }
-                  //onUpdateStep={onUpdateStep}
+                  sharedData={handleSharedData}
                 />
               </>
             )}
             <MobileStepper
               variant="dots"
-              steps={3}
+              steps={totalStep}
               position="static"
               activeStep={activeStep}
               nextButton={
-                <Button
-                  size="small"
-                  onClick={handleNext}
-                  disabled={disableNext}
-                >
-                  Next
-                  <FontAwesomeIcon
-                    icon={faArrowRight}
-                    style={{ marginLeft: 5 }}
-                  />
-                </Button>
+                activeStep === totalStep - 1 ? (
+                  <Button
+                    size="small"
+                    onClick={handleFinish}
+                    //disabled={handleDisableNext()}
+                  >
+                    Finalizar
+                  </Button>
+                ) : (
+                  <Button
+                    size="small"
+                    onClick={handleNext}
+                    disabled={handleDisableNext()}
+                  >
+                    Siguiente
+                    <FontAwesomeIcon
+                      icon={faArrowRight}
+                      style={{ marginLeft: 5 }}
+                    />
+                  </Button>
+                )
               }
               backButton={
                 <Button
@@ -196,7 +235,7 @@ const Ambientes = props => {
                     icon={faArrowLeft}
                     style={{ marginRight: 5 }}
                   />
-                  Back
+                  Atras
                 </Button>
               }
             />

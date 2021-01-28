@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 /* Componentes */
-import Capa from './Capa';
-import Lote from './Lote';
-import Modalidad from './Modalidad';
-import TipoZona from './TipoZona';
-import CapaBase from './CapaBase';
-
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import Typography from '@material-ui/core/Typography';
@@ -55,7 +49,6 @@ const StepInit = props => {
 
   useEffect(() => {
     let data = { layerName, field, mode };
-    console.log(field);
     props.sharedData(data);
   }, [layerName, field, mode]);
 

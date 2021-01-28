@@ -1,12 +1,13 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave } from '@fortawesome/pro-light-svg-icons';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
 import * as turf from '@turf/turf';
 import L from 'leaflet';
 
@@ -14,6 +15,10 @@ import L from 'leaflet';
 import MapContext from '../../../contexts/MapContext';
 
 const useStyles = makeStyles(theme360 => ({
+  root: {
+    padding: 0,
+    paddingBottom: 10
+  },
   labelTitle: {
     color: '#4A4A49',
     fontWeight: 'bold',
@@ -120,29 +125,32 @@ export default props => {
     );
   };
 
+  /*useEffect(() => {
+    if (featureGroupAmbientes) {
+      let geoJsonResult = featureCollection(featureGroupAmbientes);
+      let data = { geoJsonResult };
+      props.sharedData(data);
+    }
+  }, [featureGroupAmbientes]);*/
+
   return (
     <>
-      <Grid container spacing={3}>
+      <Grid container className={classes.root}>
         <Grid item xs={12}>
           <Typography variant="subtitle2">Tipo de ambiente:</Typography>
         </Grid>
-      </Grid>
-      <Grid container spacing={3}>
         <Grid item xs={12}>
           <Typography variant="body1">{ambientes.name}</Typography>
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container className={classes.root}>
         <Grid item xs={12}>
           <Typography component="label" className={classes.labelTitle}>
             Ambiente:
           </Typography>
         </Grid>
-      </Grid>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid item xs={10}>
           <Select
             style={{ minWidth: '100%' }}
             color="primary"
@@ -157,17 +165,19 @@ export default props => {
               ))}
           </Select>
         </Grid>
+        <Grid item xs={2}>
+          <IconButton onClick={saveEditLayer} style={{ padding: 10 }}>
+            <FontAwesomeIcon icon={faSave} />
+          </IconButton>
+        </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container className={classes.root}>
         <Grid item xs={12}>
           <Typography component="label" className={classes.labelTitle}>
             Notas:
           </Typography>
         </Grid>
-      </Grid>
-
-      <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField
             value={notes}
@@ -176,13 +186,6 @@ export default props => {
           />
         </Grid>
       </Grid>
-
-      <Box my={2} display="flex" justifyContent="space-between">
-        <Button onClick={() => props.onUpdateStep('init')}>Atras</Button>
-        <Button variant="contained" color="primary" onClick={finish}>
-          Finalizar
-        </Button>
-      </Box>
     </>
   );
 };

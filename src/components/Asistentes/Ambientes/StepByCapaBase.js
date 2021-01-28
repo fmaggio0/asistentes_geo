@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Icon from '@material-ui/core/Icon';
 import Select from '@material-ui/core/Select';
@@ -80,14 +80,6 @@ const data = [
   }
 ];
 
-const download = (content, fileName, contentType) => {
-  const a = document.createElement('a');
-  const file = new Blob([content], { type: contentType });
-  a.href = URL.createObjectURL(file);
-  a.download = fileName;
-  a.click();
-};
-
 const types = {
   muybaja: '',
   baja: '',
@@ -158,11 +150,13 @@ export default props => {
     setFeatureGroupAmbientes(combined2);
   };
 
-  const finish = () => {
-    const resultBaseLayer = featureCollection(featureGroupAmbientes);
-    console.log(resultBaseLayer);
-    download(JSON.stringify(resultBaseLayer), 'result.geojson', 'text/plain');
-  };
+  useEffect(() => {
+    if (featureGroupAmbientes) {
+      let geoJsonResult = featureCollection(featureGroupAmbientes);
+      let data = { geoJsonResult };
+      props.sharedData(data);
+    }
+  }, [featureGroupAmbientes]);
 
   return (
     <>
@@ -204,13 +198,6 @@ export default props => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Box my={2} display="flex" justifyContent="space-between">
-        <Button onClick={() => props.onUpdateStep('init')}>Atras</Button>
-        <Button variant="contained" color="primary" onClick={finish}>
-          Finalizar
-        </Button>
-      </Box>
     </>
   );
 };
