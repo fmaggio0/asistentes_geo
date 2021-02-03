@@ -1,24 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
-
-/* Componentes */
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/pro-light-svg-icons';
+import ToggleButton from '@material-ui/lab/ToggleButton';
 import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
-import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
-import PerfectScrollbar from 'react-perfect-scrollbar';
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle, faHandPointer } from '@fortawesome/pro-light-svg-icons';
-
-//Context
-import MapContext from '../../../contexts/MapContext';
+/* Step by Step */
+import StepByStepContext from 'src/contexts/StepByStepContext';
+import MobileStepper from '@material-ui/core/MobileStepper';
+import { faArrowRight, faArrowLeft } from '@fortawesome/pro-regular-svg-icons';
+/* Map Context */
+import MapContext from 'src/contexts/MapContext';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -34,23 +29,29 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-/* Datos temporales */
-const baseLayers = [
-  { id: 1, name: 'mp: L 20 quantile 5' },
-  { id: 2, name: 'mp: L 50 quantile 50' }
-];
-
-const StepInit = props => {
+const StepFirst = props => {
   const classes = useStyles();
-  const [layerName, setLayerName] = useState(props.data.layerName || '');
-  const [field, setField] = useState(props.data.field || '');
-  const [mode, setMode] = useState(props.data.mode || '');
+  const {
+    totalStep,
+    activeStep,
+    handleNext,
+    handleBack,
+    sharedData
+  } = useContext(StepByStepContext);
+  const [layerName, setLayerName] = useState(sharedData.layerName || '');
+  const [field, setField] = useState(sharedData.field || '');
+  const [mode, setMode] = useState(sharedData.mode || '');
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
     let data = { layerName, field, mode };
     props.sharedData(data);
   }, [layerName, field, mode]);
+
+  useEffect(() => {
+    console.log(totalStep);
+    console.log(activeStep);
+  }, []);
 
   useEffect(() => {
     if (mapContext.state.selected.layer) {
@@ -135,8 +136,30 @@ const StepInit = props => {
           </ToggleButtonGroup>
         </Grid>
       </Grid>
+      <MobileStepper
+        variant="dots"
+        steps={totalStep}
+        position="static"
+        activeStep={activeStep}
+        nextButton={
+          <Button
+            size="small"
+            onClick={handleNext}
+            disabled={!layerName || !mode || !field}
+          >
+            Siguiente
+            <FontAwesomeIcon icon={faArrowRight} style={{ marginLeft: 5 }} />
+          </Button>
+        }
+        backButton={
+          <Button size="small" onClick={handleBack} disabled={true}>
+            <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 5 }} />
+            Atras
+          </Button>
+        }
+      />
     </>
   );
 };
 
-export default StepInit;
+export default StepFirst;

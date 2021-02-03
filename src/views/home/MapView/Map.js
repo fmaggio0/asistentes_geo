@@ -68,7 +68,7 @@ const Map = props => {
   var useStateRef = require('react-usestateref');
   const [map, setMap] = useState(null);
   const [tileLayer, setTileLayer] = useState(null);
-  const [vectorLayers, setVectorLayers] = useState([]);
+  const [vectorLayers, setVectorLayers, vectorLayersRef] = useStateRef([]);
   const [selected, setSelected, selectedRef] = useStateRef({
     isActive: true,
     layer: null
@@ -291,18 +291,23 @@ const Map = props => {
   };
 
   const removeVectorGroup = groupName => {
-    let found = vectorLayers.find(e => e.name === groupName);
+    let found = vectorLayersRef.current.find(e => e.name === groupName);
     if (found) {
       map.removeLayer(found.layer);
 
-      /*
-      setState(prevState => ({
+      /*setState(prevState => ({
         vectorLayers: prevState.vectorLayers.filter(
           layer => layer.name !== groupName
         )
       }));*/
+
+      setVectorLayers(vectorLayers.filter(item => item.name !== groupName));
     }
   };
+
+  /*useEffect(() => {
+    console.log(vectorLayers);
+  }, [vectorLayers]);*/
 
   return (
     <div id="mapUI">

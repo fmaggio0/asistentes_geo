@@ -1,8 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback
-} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import clsx from 'clsx';
 import moment from 'moment';
@@ -55,14 +51,8 @@ const Invoices = ({ className, ...rest }) => {
   }, [getInvoices]);
 
   return (
-    <Card
-      className={clsx(classes.root, className)}
-      {...rest}
-    >
-      <CardHeader
-        action={<GenericMoreButton />}
-        title="Customer invoices"
-      />
+    <Card className={clsx(classes.root, className)} {...rest}>
+      <CardHeader action={<GenericMoreButton />} title="Customer invoices" />
       <Divider />
       <PerfectScrollbar>
         <Box minWidth={1150}>
@@ -79,30 +69,21 @@ const Invoices = ({ className, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {invoices.map((invoice) => (
+              {invoices.map(invoice => (
                 <TableRow key={invoice.id}>
-                  <TableCell>
-                    #
-                    {invoice.id}
-                  </TableCell>
+                  <TableCell>#{invoice.id}</TableCell>
                   <TableCell>
                     {moment(invoice.issueDate).format('DD/MM/YYYY | HH:MM')}
                   </TableCell>
-                  <TableCell>
-                    {invoice.description}
-                  </TableCell>
-                  <TableCell>
-                    {invoice.paymentMethod}
-                    </TableCell>
+                  <TableCell>{invoice.description}</TableCell>
+                  <TableCell>{invoice.paymentMethod}</TableCell>
                   <TableCell>
                     {invoice.currency}
                     {invoice.value}
                   </TableCell>
                   <TableCell>
                     {/* <Label color={statusColors[invoice.status]} > */}
-                    <Label color="primary">
-                      {invoice.status}
-                    </Label>
+                    <Label color="primary">{invoice.status}</Label>
                   </TableCell>
                   <TableCell align="right">
                     <IconButton

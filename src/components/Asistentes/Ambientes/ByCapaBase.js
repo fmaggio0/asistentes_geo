@@ -153,10 +153,15 @@ export default props => {
   useEffect(() => {
     if (featureGroupAmbientes) {
       let geoJsonResult = featureCollection(featureGroupAmbientes);
-      let data = { geoJsonResult };
-      props.sharedData(data);
+      props.result(geoJsonResult);
     }
   }, [featureGroupAmbientes]);
+
+  useEffect(() => {
+    return () => {
+      mapContext.removeVectorGroup('ambientes_capa_base');
+    };
+  }, []);
 
   return (
     <>

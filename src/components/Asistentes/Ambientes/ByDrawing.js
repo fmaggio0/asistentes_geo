@@ -26,14 +26,6 @@ const useStyles = makeStyles(theme360 => ({
   }
 }));
 
-const download = (content, fileName, contentType) => {
-  const a = document.createElement('a');
-  const file = new Blob([content], { type: contentType });
-  a.href = URL.createObjectURL(file);
-  a.download = fileName;
-  a.click();
-};
-
 export default props => {
   const classes = useStyles();
   const [groupName, setGroupName] = useState('drawAmbientes');
@@ -111,27 +103,6 @@ export default props => {
   const handleChangeNotas = event => {
     setNotes(event.target.value);
   };
-
-  const finish = () => {
-    saveEditLayer();
-    let foundLayerGroup = mapContext.state.vectorLayers.find(
-      e => e.name === groupName
-    );
-    console.log(foundLayerGroup.layer.toGeoJSON());
-    download(
-      JSON.stringify(foundLayerGroup.layer.toGeoJSON()),
-      'result.geojson',
-      'text/plain'
-    );
-  };
-
-  /*useEffect(() => {
-    if (featureGroupAmbientes) {
-      let geoJsonResult = featureCollection(featureGroupAmbientes);
-      let data = { geoJsonResult };
-      props.sharedData(data);
-    }
-  }, [featureGroupAmbientes]);*/
 
   return (
     <>

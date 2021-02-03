@@ -1,29 +1,21 @@
 import React, { useState, useEffect, useContext } from 'react';
-
-/* Componentes */
-import StepByCapaBase from './StepByCapaBase';
-import StepByDrawing from './StepByDrawing';
-import StepInit from './StepInit';
-import StepSecond from './StepSecond';
-
-import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
-import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
-import PerfectScrollbar from 'react-perfect-scrollbar';
-import MobileStepper from '@material-ui/core/MobileStepper';
+import { StepByStepProvider } from 'src/contexts/StepByStepContext';
+import { faTimesCircle } from '@fortawesome/pro-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faTimesCircle,
-  faArrowRight,
-  faArrowLeft
-} from '@fortawesome/pro-regular-svg-icons';
-
-//Context
-import MapContext from '../../../contexts/MapContext';
+import CardContent from '@material-ui/core/CardContent';
+import { makeStyles } from '@material-ui/core/styles';
+import CardHeader from '@material-ui/core/CardHeader';
+import IconButton from '@material-ui/core/IconButton';
+import PerfectScrollbar from 'react-perfect-scrollbar';
+import Card from '@material-ui/core/Card';
+import Box from '@material-ui/core/Box';
+import { useSnackbar } from 'notistack';
+/* Componentes */
+import StepInit from './StepFirst';
+import StepSecond from './StepSecond';
+import StepThird from './StepThird';
+/* Map Context */
+import MapContext from 'src/contexts/MapContext';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -32,12 +24,14 @@ const useStyles = makeStyles(theme => ({
     top: '20px',
     zIndex: 1000,
     width: '300px',
-    height: '600px',
-    maxHeight: 'calc(100% - 64px)'
+    maxHeight: 'calc(100% - 64px)',
+    display: 'flex',
+    flexDirection: 'column'
   },
   cardContent: {
     height: '100%',
-    padding: '0px 0px 48px 0px !important'
+    padding: '0px !important',
+    overflowY: 'auto'
   },
   cardHeader: {
     backgroundColor: theme.palette.primary.main,
@@ -62,20 +56,9 @@ const download = (content, fileName, contentType) => {
 
 const Ambientes = props => {
   const classes = useStyles();
-  //const [step, setStep] = useState('init');
-  /*const [capa, setCapa] = useState('');
-  const handlerCapa = value => setCapa(value);
-  const [lote, setLote] = useState('');
-  const handlerLote = value => setLote(value);
-  const [modalidad, setModalidad] = useState('');
-  const handlerModalidad = value => setModalidad(value);
-  const [capabase, setCapabase] = useState('');
-  const handlerCapabase = value => setCapabase(value);
-  const [tipoZona, setTipoZona] = useState('');
-  const handlerTipoZona = value => setTipoZona(value);*/
   const mapContext = useContext(MapContext);
   const [activeStep, setActiveStep] = useState(0);
-  const [totalStep, setTotalStep] = useState(3);
+  const totalStep = 3;
   const [sharedData, setSharedData] = useState({
     layerName: null,
     field: null,
@@ -84,8 +67,10 @@ const Ambientes = props => {
     baseLayer: null,
     geoJsonResult: null
   });
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
+    mapContext.toggleSelected(true);
     return () => {
       // unmount
       mapContext.removeVectorGroup('ambientes_capa_base');
@@ -102,6 +87,10 @@ const Ambientes = props => {
   };
 
   const handleSharedData = data => {
+    if (data.mode === null) {
+      data.mode = 'null';
+    }
+    console.log(data);
     setSharedData({
       ...sharedData,
       layerName: data.layerName || sharedData.layerName,
@@ -113,40 +102,16 @@ const Ambientes = props => {
     });
   };
 
-  const handleFinish = () => {
-    let result = sharedData.geoJsonResult;
-    if (sharedData.mode === 'drawing') {
-      let foundLayerGroup = mapContext.state.vectorLayers.find(
-        e => e.name === 'drawAmbientes'
-      );
-      result = foundLayerGroup.layer.toGeoJSON();
-    }
-    console.log(result);
-    download(JSON.stringify(result), 'result.geojson', 'text/plain');
+  const handleComplete = () => {
+    enqueueSnackbar('Layer created', {
+      variant: 'success'
+    });
     props.unmountMe();
   };
 
   useEffect(() => {
     console.log(sharedData);
   }, [sharedData]);
-
-  const handleDisableNext = () => {
-    if (
-      activeStep === 0 &&
-      sharedData.layerName &&
-      sharedData.field &&
-      sharedData.mode
-    ) {
-      return false;
-    } else if (
-      activeStep === 1 &&
-      //sharedData.baseLayer &&
-      sharedData.tipoZona
-    ) {
-      return false;
-    }
-    return true;
-  };
 
   return (
     <Card id="ambientes" className={classes.root}>
@@ -166,82 +131,26 @@ const Ambientes = props => {
         title={'Asistente de Ambientes'}
         className={classes.cardHeader}
       />
-      <CardContent className={classes.cardContent}>
-        <PerfectScrollbar options={{ suppressScrollX: true }}>
+      <PerfectScrollbar options={{ suppressScrollX: true }}>
+        <CardContent className={classes.cardContent}>
           <Box m={2}>
-            {activeStep === 0 && (
-              <StepInit sharedData={handleSharedData} data={sharedData} />
-            )}
-            {activeStep === 1 && (
-              <StepSecond sharedData={handleSharedData} data={sharedData} />
-            )}
-            {activeStep === 2 && sharedData.mode === 'drawing' && (
-              <>
-                <StepByDrawing
-                  ambientes={sharedData.tipoZona}
-                  lote={sharedData.field}
-                  sharedData={handleSharedData}
-                />
-              </>
-            )}
-            {activeStep === 2 && sharedData.mode === 'layer' && (
-              <>
-                <StepByCapaBase
-                  ambientes={sharedData.tipoZona}
-                  baseLayer={
-                    mapContext.state.vectorLayers.find(
-                      element => element.name === 'ambientes_capa_base'
-                    ).layer
-                  }
-                  sharedData={handleSharedData}
-                />
-              </>
-            )}
-            <MobileStepper
-              variant="dots"
-              steps={totalStep}
-              position="static"
-              activeStep={activeStep}
-              nextButton={
-                activeStep === totalStep - 1 ? (
-                  <Button
-                    size="small"
-                    onClick={handleFinish}
-                    //disabled={handleDisableNext()}
-                  >
-                    Finalizar
-                  </Button>
-                ) : (
-                  <Button
-                    size="small"
-                    onClick={handleNext}
-                    disabled={handleDisableNext()}
-                  >
-                    Siguiente
-                    <FontAwesomeIcon
-                      icon={faArrowRight}
-                      style={{ marginLeft: 5 }}
-                    />
-                  </Button>
-                )
-              }
-              backButton={
-                <Button
-                  size="small"
-                  onClick={handleBack}
-                  disabled={activeStep === 0}
-                >
-                  <FontAwesomeIcon
-                    icon={faArrowLeft}
-                    style={{ marginRight: 5 }}
-                  />
-                  Atras
-                </Button>
-              }
-            />
+            <StepByStepProvider
+              value={{
+                sharedData,
+                activeStep,
+                totalStep,
+                handleBack,
+                handleNext,
+                handleComplete
+              }}
+            >
+              {activeStep === 0 && <StepInit sharedData={handleSharedData} />}
+              {activeStep === 1 && <StepSecond sharedData={handleSharedData} />}
+              {activeStep === 2 && <StepThird />}
+            </StepByStepProvider>
           </Box>
-        </PerfectScrollbar>
-      </CardContent>
+        </CardContent>
+      </PerfectScrollbar>
     </Card>
   );
 };
