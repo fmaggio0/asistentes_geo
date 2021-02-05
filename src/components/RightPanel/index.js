@@ -3,22 +3,21 @@ import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLayerGroup } from '@fortawesome/pro-solid-svg-icons';
-import { faPen, faFileChartLine } from '@fortawesome/pro-light-svg-icons';
+import { faPlus } from '@fortawesome/pro-solid-svg-icons';
+import { faPen } from '@fortawesome/pro-light-svg-icons';
 import MapContext from 'src/contexts/MapContext';
-import EditTool from 'src/components/GisTools/EditTool';
 import Ambientes from 'src/components/Asistentes/Ambientes/index';
-import { map } from 'lodash';
+import Prescripciones from 'src/components/Asistentes/Prescripcion/index';
+import NewLayerView from 'src/components/RightPanel/NewLayerView';
 
 const useStyles = makeStyles(theme => ({
   boxgroup: {
     position: 'absolute',
     zIndex: 800,
-    top: '20px',
+    top: '10px',
     right: '10px',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: theme.palette.background.paper1,
     borderRadius: 4
   },
   button: {
@@ -27,7 +26,11 @@ const useStyles = makeStyles(theme => ({
     minWidth: 35,
     '&:not(:last-child)': {
       borderRight: 0
-    }
+    },
+    '&:disabled': {
+      backgroundColor: '#e0e0e0;'
+    },
+    marginBottom: 5
   },
   buttongroup: {
     width: 35,
@@ -50,8 +53,19 @@ const RightPanel = props => {
   const classes = useStyles();
   const [toggleGroup, setToggleGroup] = useState(false);
   const [editTool, setEditTool] = useState(false);
-  const [reports, setReports] = useState(false);
+  const [newLayerOpen, setNewLayerOpen] = useState(false);
   const mapContext = useContext(MapContext);
+  const [open, setOpen] = useState({
+    import: false,
+    ambientes: false,
+    prescripciones: false,
+    ensayos: false,
+    notas: false,
+    productividad: false,
+    rindes: false,
+    aplicaciones: false,
+    muestreos: false
+  });
 
   const toggleEditTool = () => {
     let editlayer = mapContext.state.selected.layer;
@@ -62,22 +76,27 @@ const RightPanel = props => {
     mapContext.enableEditTool(editlayer, contextlayer, 'lotes', true);
   };
 
+  const handleOpen = type => {
+    setNewLayerOpen(false);
+    setOpen({ ...open, [type]: true });
+    console.log(type);
+  };
+
   return (
     <>
       <Box className={classes.boxgroup}>
-        <Button className={classes.buttongroup} disabled>
-          <FontAwesomeIcon icon={faLayerGroup} />
-        </Button>
         <Button
           className={classes.button}
-          style={{ borderRadius: 0 }}
-          onClick={() => setReports(!reports)}
+          variant="contained"
+          color="default"
+          onClick={() => setNewLayerOpen(!newLayerOpen)}
         >
-          <FontAwesomeIcon icon={faFileChartLine} />
+          <FontAwesomeIcon icon={faPlus} />
         </Button>
         <Button
           className={classes.button}
-          style={{ borderRadius: 0 }}
+          variant="contained"
+          color="default"
           onClick={toggleEditTool}
           disabled={!mapContext.state.selected.layer}
         >
@@ -85,20 +104,22 @@ const RightPanel = props => {
         </Button>
       </Box>
 
-      {/*editTool && (
-        <EditTool
-          editLayer={mapContext.state.selected}
-          contextLayer={
-            mapContext.state.vectorLayers.find(
-              element => element.name === 'lotes'
-            ).layer
-          }
-          result={mapContext.updateVectorLayer}
-          unmountMe={() => setEditTool(false)}
+      {newLayerOpen && (
+        <NewLayerView
+          open={handleOpen}
+          unmountMe={() => setNewLayerOpen(false)}
         />
-      )*/}
+      )}
 
-      {reports && <Ambientes unmountMe={() => setReports(false)} />}
+      {open.ambientes && (
+        <Ambientes unmountMe={() => setOpen({ ...open, ambientes: false })} />
+      )}
+
+      {open.prescripciones && (
+        <Prescripciones
+          unmountMe={() => setOpen({ ...open, prescripciones: false })}
+        />
+      )}
     </>
   );
 };

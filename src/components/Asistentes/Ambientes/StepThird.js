@@ -62,12 +62,10 @@ const StepThird = props => {
   };
 
   const onResult = data => {
-    console.log(data);
     setResult(data);
   };
 
   const onBack = () => {
-    //mapContext.removeVectorGroup('ambientes_capa_base');
     handleBack();
   };
 

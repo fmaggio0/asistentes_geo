@@ -40,34 +40,17 @@ const StepFirst = props => {
     handleBack,
     sharedData
   } = useContext(StepByStepContext);
-  const [layerName, setLayerName] = useState(sharedData.layerName || '');
   const [field, setField] = useState(sharedData.field || '');
-  const [mode, setMode] = useState(sharedData.mode || '');
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
-    let data = { layerName, field, mode };
+    let data = { field };
     props.sharedData(data);
-  }, [layerName, field, mode]);
+  }, [field]);
 
   return (
     <>
-      <Grid container className={classes.root}>
-        <Grid item xs={12}>
-          <Typography component="label" variant="subtitle2">
-            Nombre de la capa
-          </Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            size="small"
-            className={classes.layerName}
-            value={layerName}
-            onChange={e => setLayerName(e.target.value)}
-            fullWidth
-          />
-        </Grid>
-      </Grid>
+      <SelectField onChange={value => setField(value)} />
       {/*<Grid container className={classes.root}>
         <Grid item xs={12}>
           <Typography component="label" variant="subtitle2">
@@ -92,7 +75,7 @@ const StepFirst = props => {
             fullWidth
           />
         </Grid>
-          </Grid>*/}
+          </Grid>
       <SelectField onChange={value => setField(value)} />
       <Grid container className={classes.root}>
         <Grid item xs={12}>
@@ -124,7 +107,7 @@ const StepFirst = props => {
             </ToggleButton>
           </ToggleButtonGroup>
         </Grid>
-      </Grid>
+      </Grid>*/}
       <MobileStepper
         variant="dots"
         steps={totalStep}
@@ -134,7 +117,7 @@ const StepFirst = props => {
           <Button
             size="small"
             onClick={handleNext}
-            disabled={!layerName || !mode || !field}
+            //disabled={!layerName || !mode || !field}
           >
             Siguiente
             <FontAwesomeIcon icon={faArrowRight} style={{ marginLeft: 5 }} />

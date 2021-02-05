@@ -11,9 +11,7 @@ import Card from '@material-ui/core/Card';
 import Box from '@material-ui/core/Box';
 import { useSnackbar } from 'notistack';
 /* Componentes */
-import StepInit from './StepFirst';
-import StepSecond from './StepSecond';
-import StepThird from './StepThird';
+import StepFirst from './StepFirst';
 /* Map Context */
 import MapContext from 'src/contexts/MapContext';
 
@@ -46,7 +44,15 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Ambientes = props => {
+const download = (content, fileName, contentType) => {
+  const a = document.createElement('a');
+  const file = new Blob([content], { type: contentType });
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
+};
+
+const Prescripciones = props => {
   const classes = useStyles();
   const mapContext = useContext(MapContext);
   const [activeStep, setActiveStep] = useState(0);
@@ -126,9 +132,9 @@ const Ambientes = props => {
                 handleComplete
               }}
             >
-              {activeStep === 0 && <StepInit sharedData={handleSharedData} />}
-              {activeStep === 1 && <StepSecond sharedData={handleSharedData} />}
-              {activeStep === 2 && <StepThird />}
+              {activeStep === 0 && <StepFirst sharedData={handleSharedData} />}
+              {/*activeStep === 1 && <StepSecond sharedData={handleSharedData} />}
+              {activeStep === 2 && <StepThird />*/}
             </StepByStepProvider>
           </Box>
         </CardContent>
@@ -137,4 +143,4 @@ const Ambientes = props => {
   );
 };
 
-export default Ambientes;
+export default Prescripciones;
