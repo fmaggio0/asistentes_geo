@@ -13,7 +13,8 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPalette, faCircle } from '@fortawesome/pro-solid-svg-icons';
+import { faCircle } from '@fortawesome/pro-solid-svg-icons';
+import { faPalette } from '@fortawesome/pro-light-svg-icons';
 
 const useStyles = makeStyles(theme => ({
   header: {

@@ -3,12 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import dataCapaBase from 'src/data/capasbase.json';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 /* Componentes */
 import TipoZona from './TipoZona';
+import SelectBaseLayer from '../SelectBaseLayer';
 /* Map context */
 import MapContext from 'src/contexts/MapContext';
 /* Step by Step */
@@ -45,16 +44,9 @@ const StepSecond = props => {
     handleBack,
     sharedData
   } = useContext(StepByStepContext);
-  const [baseLayer, setBaseLayer] = useState([]);
   const [selectedBaseLayer, setSelectedBaseLayer] = useState('');
   const [tipoZona, setTipoZona] = useState(sharedData.tipoZona || '');
   const mapContext = useContext(MapContext);
-
-  useEffect(() => {
-    //Axios api call to set if mode baselayer
-    if (sharedData.mode === 'layer') setBaseLayer(baseLayers);
-    mapContext.toggleSelected(false);
-  }, []);
 
   useEffect(() => {
     let baseLayer = selectedBaseLayer;
@@ -78,27 +70,7 @@ const StepSecond = props => {
   return (
     <>
       {sharedData.mode === 'layer' && (
-        <Grid container className={classes.root}>
-          <Grid item xs={12}>
-            <Typography component="label" variant="subtitle2">
-              Capa base
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Select
-              style={{ minWidth: '100%' }}
-              onChange={e => setSelectedBaseLayer(e.target.value)}
-              value={selectedBaseLayer}
-            >
-              {baseLayer &&
-                baseLayer.map(row => (
-                  <MenuItem value={row.id} key={row.id}>
-                    {row.name}
-                  </MenuItem>
-                ))}
-            </Select>
-          </Grid>
-        </Grid>
+        <SelectBaseLayer onChange={value => setSelectedBaseLayer(value)} />
       )}
       <Grid container className={classes.root}>
         <Grid item xs={12}>

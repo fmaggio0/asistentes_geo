@@ -68,32 +68,9 @@ const StepFirst = props => {
           />
         </Grid>
       </Grid>
-      {/*<Grid container className={classes.root}>
-        <Grid item xs={12}>
-          <Typography component="label" variant="subtitle2">
-            Lote (seleccione en el mapa)
-          </Typography>
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          style={{ display: 'inline-flex', alignItems: 'flex-end' }}
-        >
-          <FontAwesomeIcon
-            icon={faHandPointer}
-            size={'lg'}
-            style={{ marginRight: 10 }}
-          />
-          <TextField
-            value={field ? field.feature.properties.Field : ''}
-            InputProps={{
-              readOnly: true
-            }}
-            fullWidth
-          />
-        </Grid>
-          </Grid>*/}
+
       <SelectField onChange={value => setField(value)} />
+
       <Grid container className={classes.root}>
         <Grid item xs={12}>
           <Typography component="label" variant="subtitle2">

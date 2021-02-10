@@ -12,6 +12,7 @@ import Box from '@material-ui/core/Box';
 import { useSnackbar } from 'notistack';
 /* Componentes */
 import StepFirst from './StepFirst';
+import StepSecond from './StepSecond';
 /* Map Context */
 import MapContext from 'src/contexts/MapContext';
 
@@ -58,12 +59,11 @@ const Prescripciones = props => {
   const [activeStep, setActiveStep] = useState(0);
   const totalStep = 3;
   const [sharedData, setSharedData] = useState({
-    layerName: null,
     field: null,
-    mode: null,
-    tipoZona: null,
     baseLayer: null,
-    geoJsonResult: null
+    treatment: null,
+    unit: null,
+    input: null
   });
   const { enqueueSnackbar } = useSnackbar();
 
@@ -121,7 +121,7 @@ const Prescripciones = props => {
       />
       <PerfectScrollbar options={{ suppressScrollX: true }}>
         <CardContent className={classes.cardContent}>
-          <Box m={2}>
+          <Box m={3}>
             <StepByStepProvider
               value={{
                 sharedData,
@@ -133,8 +133,7 @@ const Prescripciones = props => {
               }}
             >
               {activeStep === 0 && <StepFirst sharedData={handleSharedData} />}
-              {/*activeStep === 1 && <StepSecond sharedData={handleSharedData} />}
-              {activeStep === 2 && <StepThird />*/}
+              {activeStep === 1 && <StepSecond sharedData={handleSharedData} />}
             </StepByStepProvider>
           </Box>
         </CardContent>

@@ -115,7 +115,7 @@ const Ambientes = props => {
       />
       <PerfectScrollbar options={{ suppressScrollX: true }}>
         <CardContent className={classes.cardContent}>
-          <Box m={2}>
+          <Box m={3}>
             <StepByStepProvider
               value={{
                 sharedData,
