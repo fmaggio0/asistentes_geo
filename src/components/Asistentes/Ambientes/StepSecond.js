@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import dataCapaBase from 'src/data/capasbase.json';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 /* Componentes */
@@ -29,12 +28,6 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-/* Datos temporales */
-const baseLayers = [
-  { id: 1, name: 'mp: L 20 quantile 5' },
-  { id: 2, name: 'mp: L 50 quantile 50' }
-];
-
 const StepSecond = props => {
   const classes = useStyles();
   const {
@@ -54,14 +47,6 @@ const StepSecond = props => {
     props.sharedData(data);
   }, [selectedBaseLayer, tipoZona]);
 
-  useEffect(() => {
-    console.log(selectedBaseLayer);
-    //Axios api call para traer geometrias de la capa base
-    if (selectedBaseLayer) {
-      mapContext.addGeoJSONLayer(dataCapaBase, 'ambientes_capa_base');
-    }
-  }, [selectedBaseLayer]);
-
   const onBack = () => {
     mapContext.removeVectorGroup('ambientes_capa_base');
     handleBack();
@@ -70,7 +55,10 @@ const StepSecond = props => {
   return (
     <>
       {sharedData.mode === 'layer' && (
-        <SelectBaseLayer onChange={value => setSelectedBaseLayer(value)} />
+        <SelectBaseLayer
+          nameGroup={'ambientes_capa_base'}
+          onChange={value => setSelectedBaseLayer(value)}
+        />
       )}
       <Grid container className={classes.root}>
         <Grid item xs={12}>

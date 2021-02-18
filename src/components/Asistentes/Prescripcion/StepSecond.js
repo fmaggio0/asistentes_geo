@@ -32,6 +32,7 @@ import SelectBaseLayer from '../SelectBaseLayer';
 
 import * as turf from '@turf/turf';
 import { SketchPicker } from 'react-color';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const useStyles = makeStyles(theme => ({
   grid: {
@@ -114,6 +115,14 @@ const types = {
   muyalta: ''
 };
 
+const typesColors = {
+  muybaja: '#000000',
+  baja: '#000000',
+  media: '#000000',
+  alta: '#000000',
+  muyalta: '#000000'
+};
+
 const StepSecond = props => {
   const classes = useStyles();
   const {
@@ -121,12 +130,14 @@ const StepSecond = props => {
     activeStep,
     handleNext,
     handleBack,
-    sharedData
+    sharedData,
+    handleComplete
   } = useContext(StepByStepContext);
   const [rows, setRows] = useState(data);
   const [dose, setDose] = useState(types);
   const [average, setAverage] = useState(0);
   const [total, setTotal] = useState(0);
+  const [featureGroupAmbientes, setFeatureGroupAmbientes] = useState([]);
   const [displayColorPicker, setDisplayColorPicker] = useState({
     muybaja: false,
     baja: false,
@@ -134,67 +145,16 @@ const StepSecond = props => {
     alta: false,
     muyalta: false
   });
-  const [colorPicker, setColorPicker] = useState({
-    muybaja: '#000000',
-    baja: '#000000',
-    media: '#000000',
-    alta: '#000000',
-    muyalta: '#000000'
-  });
+  const [colorPicker, setColorPicker] = useState(typesColors);
+  const [canals, setCanals] = useState([]);
   const mapContext = useContext(MapContext);
 
   const handleChange = row => event => {
     let selected = event.target.value;
-
-    /*let copyRows = [...rows];
-    let foundIndex = rows.findIndex(x => x.name === row.name);
-    copyRows[foundIndex].color = selected.color;
-    setRows(copyRows);*/
-
     setDose({
       ...dose,
       [row.name]: selected
     });
-
-    /*let setAmbientesLayers = [];
-
-    baseLayer.eachLayer(function(layer) {
-      if (layer.feature.properties.Class === row.class) {
-        let foundIndex = featureGroupAmbientes.findIndex(
-          x => x.id === layer._leaflet_id
-        );
-
-        let properties = {};
-        properties['Id tipo ambientes'] = ambientes.id;
-        properties['Tipo ambiente'] = ambientes.name;
-        properties['Id ambiente'] = selected.id;
-        properties['Nombre ambiente'] = selected.value;
-        properties['Notas'] = '';
-
-        if (foundIndex !== -1) {
-          let old = featureGroupAmbientes[foundIndex];
-          let clone = [...featureGroupAmbientes];
-          old.properties = properties;
-          clone[foundIndex] = old;
-          setFeatureGroupAmbientes(clone);
-        } else {
-          let layergeo = layer.toGeoJSON();
-          layergeo.id = layer._leaflet_id;
-          layergeo.properties = properties;
-          setAmbientesLayers.push(layergeo);
-        }
-
-        layer.setStyle({
-          fillColor: selected.color,
-          fillOpacity: '1',
-          weight: '1',
-          color: '#000000'
-        });
-      }
-    });
-
-    const combined2 = [...setAmbientesLayers, ...featureGroupAmbientes];
-    setFeatureGroupAmbientes(combined2);*/
   };
 
   useEffect(() => {
@@ -225,11 +185,104 @@ const StepSecond = props => {
   };
 
   const handleChangeColor = (color, row) => {
+    let setAmbientesLayers = [];
+    let baseLayer = mapContext.getLayerByGroup('prescripcion_capa_base');
+
+    baseLayer.layer.eachLayer(function(layer) {
+      if (layer.feature.properties.Class === row.class) {
+        /*let foundIndex = featureGroupAmbientes.findIndex(
+          x => x.id === layer._leaflet_id
+        );
+
+        let properties = {};
+        properties['Id tipo ambientes'] = ambientes.id;
+        properties['Tipo ambiente'] = ambientes.name;
+        properties['Id ambiente'] = selected.id;
+        properties['Nombre ambiente'] = selected.value;
+        properties['Notas'] = '';
+
+        if (foundIndex !== -1) {
+          let old = featureGroupAmbientes[foundIndex];
+          let clone = [...featureGroupAmbientes];
+          old.properties = properties;
+          clone[foundIndex] = old;
+          setFeatureGroupAmbientes(clone);
+        } else {
+          let layergeo = layer.toGeoJSON();
+          layergeo.id = layer._leaflet_id;
+          layergeo.properties = properties;
+          setAmbientesLayers.push(layergeo);
+        }*/
+
+        layer.setStyle({
+          fillColor: color.hex,
+          fillOpacity: '1',
+          weight: '1',
+          color: '#000000'
+        });
+      }
+    });
+
+    /*const combined2 = [...setAmbientesLayers, ...featureGroupAmbientes];
+    setFeatureGroupAmbientes(combined2);*/
+
     setColorPicker({
       ...colorPicker,
       [row.name]: color.hex
     });
   };
+
+  /*useEffect(() => {
+    setCanals([]);
+  }, [dose, colorPicker]);*/
+
+  const addCanal = () => {
+    setCanals(oldArray => [...oldArray, { doses: dose, colors: colorPicker }]);
+    setDose(types);
+    setColorPicker(typesColors);
+  };
+
+  const finish = () => {
+    console.log('finish');
+
+    let baseLayer = mapContext.getLayerByGroup('prescripcion_capa_base');
+    let geoBaseLayer = baseLayer.layer.toGeoJSON();
+
+    rows.forEach(element => {
+      turf.featureEach(geoBaseLayer, function(currentFeature, featureIndex) {
+        if (element.class === currentFeature.properties.Class) {
+          geoBaseLayer.features[featureIndex].properties = {};
+          geoBaseLayer.features[featureIndex].properties.treatment =
+            sharedData.treatment;
+          geoBaseLayer.features[featureIndex].properties.unit = sharedData.unit;
+          geoBaseLayer.features[featureIndex].properties.input =
+            sharedData.input;
+
+          /*if (canals) {
+            canals.forEach(function(item, index) {
+              geoBaseLayer.features[featureIndex].properties.dose =
+                item.doses[element.name];
+              geoBaseLayer.features[featureIndex].properties.color =
+                item.colors[element.name];
+            });
+          } else {*/
+          geoBaseLayer.features[featureIndex].properties.dose =
+            dose[element.name];
+          geoBaseLayer.features[featureIndex].properties.color =
+            colorPicker[element.name];
+          /* }*/
+        }
+      });
+    });
+
+    console.log(geoBaseLayer);
+
+    handleComplete();
+  };
+
+  useEffect(() => {
+    console.log(canals);
+  }, [canals]);
 
   return (
     <>
@@ -311,53 +364,67 @@ const StepSecond = props => {
           </Table>
         </TableContainer>
       </Grid>
+
       <Divider style={{ marginBottom: 10, marginTop: 10 }} />
       <Grid container className={classes.grid}>
-        <Grid item xs={4}>
+        <Grid item xs={6}>
           <Typography component="label" variant="subtitle2">
             Tratamiento
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={6}>
           <Typography component="label" variant="body2">
             {sharedData.treatment}
           </Typography>
         </Grid>
       </Grid>
       <Grid container className={classes.grid}>
-        <Grid item xs={4}>
+        <Grid item xs={6}>
           <Typography component="label" variant="subtitle2">
             Insumo
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={6}>
           <Typography component="label" variant="body2">
             {sharedData.input}
           </Typography>
         </Grid>
       </Grid>
       <Grid container className={classes.grid}>
-        <Grid item xs={4}>
+        <Grid item xs={6}>
           <Typography component="label" variant="subtitle2">
             Promedio
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={6}>
           <Typography component="label" variant="body2">
             {average} {sharedData.unit}
           </Typography>
         </Grid>
       </Grid>
       <Grid container className={classes.grid}>
-        <Grid item xs={4}>
+        <Grid item xs={6}>
           <Typography component="label" variant="subtitle2">
             Total
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={6}>
           <Typography component="label" variant="body2">
             {total} {sharedData.unit.substring(0, 2)}
           </Typography>
+        </Grid>
+      </Grid>
+      <Grid container className={classes.grid}>
+        <Grid item xs={12}>
+          <Button
+            size="small"
+            onClick={addCanal}
+            variant="outlined"
+            color="primary"
+          >
+            Canal
+            <FontAwesomeIcon icon={faPlus} style={{ marginLeft: 5 }} />
+          </Button>
         </Grid>
       </Grid>
 
@@ -369,11 +436,10 @@ const StepSecond = props => {
         nextButton={
           <Button
             size="small"
-            onClick={handleNext}
+            onClick={finish}
             //disabled={!layerName || !mode || !field}
           >
-            Siguiente
-            <FontAwesomeIcon icon={faArrowRight} style={{ marginLeft: 5 }} />
+            Finalizar
           </Button>
         }
         backButton={

@@ -45,19 +45,11 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const download = (content, fileName, contentType) => {
-  const a = document.createElement('a');
-  const file = new Blob([content], { type: contentType });
-  a.href = URL.createObjectURL(file);
-  a.download = fileName;
-  a.click();
-};
-
 const Prescripciones = props => {
   const classes = useStyles();
   const mapContext = useContext(MapContext);
   const [activeStep, setActiveStep] = useState(0);
-  const totalStep = 3;
+  const totalStep = 2;
   const [sharedData, setSharedData] = useState({
     field: null,
     baseLayer: null,

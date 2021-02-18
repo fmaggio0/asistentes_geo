@@ -9,6 +9,8 @@ import Select from '@material-ui/core/Select';
 import Grid from '@material-ui/core/Grid';
 /* Map Context */
 import MapContext from 'src/contexts/MapContext';
+/* Datos temporales */
+import dataCapaBase from 'src/data/capasbase.json';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -19,8 +21,8 @@ const useStyles = makeStyles(theme => ({
 
 /* Datos temporales */
 const baseLayers = [
-  { id: 1, name: 'mp: L 20 quantile 5' },
-  { id: 2, name: 'mp: L 50 quantile 50' }
+  { id: 1, name: 'mp: L 20 quantile 5', geojson: dataCapaBase },
+  { id: 2, name: 'mp: L 50 quantile 50', geojson: dataCapaBase }
 ];
 
 const SelectBaseLayer = props => {
@@ -36,6 +38,9 @@ const SelectBaseLayer = props => {
   }, []);
 
   useEffect(() => {
+    if (selectedBaseLayer) {
+      mapContext.addGeoJSONLayer(selectedBaseLayer.geojson, props.nameGroup);
+    }
     props.onChange(selectedBaseLayer);
   }, [selectedBaseLayer]);
 
@@ -54,7 +59,7 @@ const SelectBaseLayer = props => {
         >
           {baseLayer &&
             baseLayer.map(row => (
-              <MenuItem value={row.id} key={row.id}>
+              <MenuItem value={row} key={row.id}>
                 {row.name}
               </MenuItem>
             ))}

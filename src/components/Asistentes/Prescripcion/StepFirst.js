@@ -20,9 +20,6 @@ import MapContext from 'src/contexts/MapContext';
 import SelectField from '../SelectField';
 import SelectBaseLayer from '../SelectBaseLayer';
 
-/* Datos temporales */
-import dataCapaBase from 'src/data/capasbase.json';
-
 const useStyles = makeStyles(theme => ({
   root: {
     padding: 0,
@@ -69,18 +66,21 @@ const StepFirst = props => {
     props.sharedData(data);
   }, [field, selectedBaseLayer, selectedTreatment, selectedUnit, input]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     //Axios api call para traer geometrias de la capa base
     if (selectedBaseLayer) {
       mapContext.addGeoJSONLayer(dataCapaBase, 'prescripcion_capa_base');
     }
-  }, [selectedBaseLayer]);
+  }, [selectedBaseLayer]);*/
 
   return (
     <>
       <SelectField onChange={value => setField(value)} />
 
-      <SelectBaseLayer onChange={value => setSelectedBaseLayer(value)} />
+      <SelectBaseLayer
+        nameGroup={'prescripcion_capa_base'}
+        onChange={value => setSelectedBaseLayer(value)}
+      />
 
       <Grid container className={classes.root}>
         <Grid item xs={12}>

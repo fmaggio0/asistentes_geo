@@ -305,6 +305,11 @@ const Map = props => {
     }
   };
 
+  const getLayerByGroup = groupName => {
+    let found = vectorLayersRef.current.find(e => e.name === groupName);
+    return found;
+  };
+
   /*useEffect(() => {
     console.log(vectorLayers);
   }, [vectorLayers]);*/
@@ -322,7 +327,8 @@ const Map = props => {
           removeLayerById,
           setResultEditTool,
           toggleSelected,
-          addGeoJSONLayer
+          addGeoJSONLayer,
+          getLayerByGroup
         }}
       >
         <RightPanel />
