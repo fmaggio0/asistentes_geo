@@ -17,7 +17,7 @@ const useStyles = makeStyles(theme => ({
 
 const SelectField = props => {
   const classes = useStyles();
-  const [field, setField] = useState(0);
+  const [field, setField] = useState(props.value || '');
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
@@ -55,6 +55,7 @@ const SelectField = props => {
             readOnly: true
           }}
           fullWidth
+          disabled={props.disabled}
         />
       </Grid>
     </Grid>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHandPointer } from '@fortawesome/pro-light-svg-icons';
 import ToggleButton from '@material-ui/lab/ToggleButton';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
@@ -12,8 +11,6 @@ import Grid from '@material-ui/core/Grid';
 import StepByStepContext from 'src/contexts/StepByStepContext';
 import MobileStepper from '@material-ui/core/MobileStepper';
 import { faArrowRight, faArrowLeft } from '@fortawesome/pro-regular-svg-icons';
-/* Map Context */
-import MapContext from 'src/contexts/MapContext';
 /* Components */
 import SelectField from '../SelectField';
 
@@ -43,7 +40,6 @@ const StepFirst = props => {
   const [layerName, setLayerName] = useState(sharedData.layerName || '');
   const [field, setField] = useState(sharedData.field || '');
   const [mode, setMode] = useState(sharedData.mode || '');
-  const mapContext = useContext(MapContext);
 
   useEffect(() => {
     let data = { layerName, field, mode };

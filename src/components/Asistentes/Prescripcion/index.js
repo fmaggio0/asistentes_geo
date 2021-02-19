@@ -53,9 +53,12 @@ const Prescripciones = props => {
   const [sharedData, setSharedData] = useState({
     field: null,
     baseLayer: null,
-    treatment: null,
-    unit: null,
-    input: null
+    treatment: [],
+    unit: [],
+    input: [],
+    colors: [],
+    doses: [],
+    addCanal: false
   });
   const { enqueueSnackbar } = useSnackbar();
 
@@ -63,9 +66,10 @@ const Prescripciones = props => {
     mapContext.toggleSelected(true);
     return () => {
       // unmount
-      mapContext.removeVectorGroup('ambientes_capa_base');
+      mapContext.removeVectorGroup('prescripcion_capa_base');
       mapContext.toggleSelected(true);
     };
+    // eslint-disable-next-line
   }, []);
 
   const handleNext = () => {
@@ -108,7 +112,7 @@ const Prescripciones = props => {
             />
           </IconButton>
         }
-        title={'Asistente de Ambientes'}
+        title={'Asistente de Prescripción'}
         className={classes.cardHeader}
       />
       <PerfectScrollbar options={{ suppressScrollX: true }}>

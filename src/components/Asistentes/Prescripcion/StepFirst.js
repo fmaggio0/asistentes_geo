@@ -1,8 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+import React, { useState, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHandPointer } from '@fortawesome/pro-light-svg-icons';
-import ToggleButton from '@material-ui/lab/ToggleButton';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
@@ -14,8 +11,6 @@ import Grid from '@material-ui/core/Grid';
 import StepByStepContext from 'src/contexts/StepByStepContext';
 import MobileStepper from '@material-ui/core/MobileStepper';
 import { faArrowRight, faArrowLeft } from '@fortawesome/pro-regular-svg-icons';
-/* Map Context */
-import MapContext from 'src/contexts/MapContext';
 /* Components */
 import SelectField from '../SelectField';
 import SelectBaseLayer from '../SelectBaseLayer';
@@ -24,13 +19,6 @@ const useStyles = makeStyles(theme => ({
   root: {
     padding: 0,
     paddingBottom: 10
-  },
-  ToggleButtonGroup: {
-    width: '100%',
-    marginTop: 10
-  },
-  ToggleButton: {
-    width: '50%'
   }
 }));
 
@@ -51,35 +39,36 @@ const StepFirst = props => {
   const [selectedBaseLayer, setSelectedBaseLayer] = useState(
     sharedData.baseLayer || ''
   );
-  const [selectedTreatment, setSelectedTreatment] = useState(
-    sharedData.treatment || ''
-  );
-  const [selectedUnit, setSelectedUnit] = useState(sharedData.unit || '');
-  const [input, setInput] = useState(sharedData.input || '');
-  const mapContext = useContext(MapContext);
+  const [selectedTreatment, setSelectedTreatment] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState('');
+  const [input, setInput] = useState('');
 
-  useEffect(() => {
+  const nextStep = () => {
     let baseLayer = selectedBaseLayer;
-    let treatment = selectedTreatment;
-    let unit = selectedUnit;
-    let data = { field, baseLayer, treatment, unit, input };
+    let data = {
+      field,
+      baseLayer,
+      treatment: [...sharedData.treatment, selectedTreatment],
+      unit: [...sharedData.unit, selectedUnit],
+      input: [...sharedData.input, input]
+    };
     props.sharedData(data);
-  }, [field, selectedBaseLayer, selectedTreatment, selectedUnit, input]);
-
-  /*useEffect(() => {
-    //Axios api call para traer geometrias de la capa base
-    if (selectedBaseLayer) {
-      mapContext.addGeoJSONLayer(dataCapaBase, 'prescripcion_capa_base');
-    }
-  }, [selectedBaseLayer]);*/
+    handleNext();
+  };
 
   return (
     <>
-      <SelectField onChange={value => setField(value)} />
+      <SelectField
+        onChange={value => setField(value)}
+        disabled={sharedData.addCanal}
+        value={field}
+      />
 
       <SelectBaseLayer
         nameGroup={'prescripcion_capa_base'}
         onChange={value => setSelectedBaseLayer(value)}
+        value={selectedBaseLayer}
+        disabled={sharedData.addCanal}
       />
 
       <Grid container className={classes.root}>
@@ -149,7 +138,7 @@ const StepFirst = props => {
         nextButton={
           <Button
             size="small"
-            onClick={handleNext}
+            onClick={nextStep}
             disabled={
               !field ||
               !selectedBaseLayer ||

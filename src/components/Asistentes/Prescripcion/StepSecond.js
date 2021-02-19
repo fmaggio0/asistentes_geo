@@ -1,50 +1,35 @@
 import React, { useState, useEffect, useContext } from 'react';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+import { faPalette } from '@fortawesome/pro-light-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHandPointer, faPalette } from '@fortawesome/pro-light-svg-icons';
+import TableContainer from '@material-ui/core/TableContainer';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import { faCircle } from '@fortawesome/pro-solid-svg-icons';
+import { faPlus } from '@fortawesome/pro-solid-svg-icons';
 import IconButton from '@material-ui/core/IconButton';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import TextField from '@material-ui/core/TextField';
-import MenuItem from '@material-ui/core/MenuItem';
-import Divider from '@material-ui/core/Divider';
-import Button from '@material-ui/core/Button';
-import Grid from '@material-ui/core/Grid';
-import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
+import TextField from '@material-ui/core/TextField';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import Divider from '@material-ui/core/Divider';
+import Button from '@material-ui/core/Button';
+import Table from '@material-ui/core/Table';
 import Paper from '@material-ui/core/Paper';
-import { faCircle } from '@fortawesome/pro-solid-svg-icons';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import InputAdornment from '@material-ui/core/InputAdornment';
+import { SketchPicker } from 'react-color';
+import Grid from '@material-ui/core/Grid';
+import * as turf from '@turf/turf';
 /* Step by Step */
 import StepByStepContext from 'src/contexts/StepByStepContext';
 import MobileStepper from '@material-ui/core/MobileStepper';
-import { faArrowRight, faArrowLeft } from '@fortawesome/pro-regular-svg-icons';
 /* Map Context */
 import MapContext from 'src/contexts/MapContext';
-/* Components */
-import SelectField from '../SelectField';
-import SelectBaseLayer from '../SelectBaseLayer';
-
-import * as turf from '@turf/turf';
-import { SketchPicker } from 'react-color';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const useStyles = makeStyles(theme => ({
   grid: {
     padding: 0,
     paddingBottom: 10
-  },
-  ToggleButtonGroup: {
-    width: '100%',
-    marginTop: 10
-  },
-  ToggleButton: {
-    width: '50%'
   },
   popoverPicker: {
     position: 'absolute',
@@ -60,12 +45,6 @@ const useStyles = makeStyles(theme => ({
     left: '0px'
   }
 }));
-
-const iconPalette = <FontAwesomeIcon icon={faPalette} />;
-const iconColor = color => {
-  color = color || '#000000';
-  return <FontAwesomeIcon style={{ color: color }} icon={faCircle} />;
-};
 
 const label = (text, helperText) => {
   return (
@@ -116,11 +95,19 @@ const types = {
 };
 
 const typesColors = {
-  muybaja: '#000000',
-  baja: '#000000',
-  media: '#000000',
-  alta: '#000000',
-  muyalta: '#000000'
+  muybaja: '',
+  baja: '',
+  media: '',
+  alta: '',
+  muyalta: ''
+};
+
+const download = (content, fileName, contentType) => {
+  const a = document.createElement('a');
+  const file = new Blob([content], { type: contentType });
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
 };
 
 const StepSecond = props => {
@@ -137,7 +124,8 @@ const StepSecond = props => {
   const [dose, setDose] = useState(types);
   const [average, setAverage] = useState(0);
   const [total, setTotal] = useState(0);
-  const [featureGroupAmbientes, setFeatureGroupAmbientes] = useState([]);
+  const [baseLayer, setBaseLayer] = useState(null);
+  const [disableNext, setDisableNext] = useState(false);
   const [displayColorPicker, setDisplayColorPicker] = useState({
     muybaja: false,
     baja: false,
@@ -146,16 +134,15 @@ const StepSecond = props => {
     muyalta: false
   });
   const [colorPicker, setColorPicker] = useState(typesColors);
-  const [canals, setCanals] = useState([]);
   const mapContext = useContext(MapContext);
 
-  const handleChange = row => event => {
-    let selected = event.target.value;
-    setDose({
-      ...dose,
-      [row.name]: selected
-    });
-  };
+  useEffect(() => {
+    let baseLayerTemp = mapContext.getLayerByGroup('prescripcion_capa_base');
+    setBaseLayer(baseLayerTemp);
+    return () => {
+      baseLayerTemp.layer.resetStyle();
+    };
+  }, []);
 
   useEffect(() => {
     /* Total */
@@ -169,6 +156,23 @@ const StepSecond = props => {
     let average1 = total / (area / 10000);
     setAverage(average1.toFixed(2));
   }, [dose]);
+
+  useEffect(() => {
+    let checkDose = Object.values(dose).some(x => x === null || x === '');
+    let checkColors = Object.values(colorPicker).some(
+      x => x === null || x === ''
+    );
+    if (!checkDose && !checkColors) setDisableNext(false);
+    else setDisableNext(true);
+  }, [dose, colorPicker]);
+
+  const handleChange = row => event => {
+    let selected = event.target.value;
+    setDose({
+      ...dose,
+      [row.name]: selected
+    });
+  };
 
   const handleOpenPicker = row => {
     setDisplayColorPicker({
@@ -186,34 +190,9 @@ const StepSecond = props => {
 
   const handleChangeColor = (color, row) => {
     let setAmbientesLayers = [];
-    let baseLayer = mapContext.getLayerByGroup('prescripcion_capa_base');
 
     baseLayer.layer.eachLayer(function(layer) {
       if (layer.feature.properties.Class === row.class) {
-        /*let foundIndex = featureGroupAmbientes.findIndex(
-          x => x.id === layer._leaflet_id
-        );
-
-        let properties = {};
-        properties['Id tipo ambientes'] = ambientes.id;
-        properties['Tipo ambiente'] = ambientes.name;
-        properties['Id ambiente'] = selected.id;
-        properties['Nombre ambiente'] = selected.value;
-        properties['Notas'] = '';
-
-        if (foundIndex !== -1) {
-          let old = featureGroupAmbientes[foundIndex];
-          let clone = [...featureGroupAmbientes];
-          old.properties = properties;
-          clone[foundIndex] = old;
-          setFeatureGroupAmbientes(clone);
-        } else {
-          let layergeo = layer.toGeoJSON();
-          layergeo.id = layer._leaflet_id;
-          layergeo.properties = properties;
-          setAmbientesLayers.push(layergeo);
-        }*/
-
         layer.setStyle({
           fillColor: color.hex,
           fillOpacity: '1',
@@ -223,66 +202,55 @@ const StepSecond = props => {
       }
     });
 
-    /*const combined2 = [...setAmbientesLayers, ...featureGroupAmbientes];
-    setFeatureGroupAmbientes(combined2);*/
-
     setColorPicker({
       ...colorPicker,
       [row.name]: color.hex
     });
   };
 
-  /*useEffect(() => {
-    setCanals([]);
-  }, [dose, colorPicker]);*/
-
   const addCanal = () => {
-    setCanals(oldArray => [...oldArray, { doses: dose, colors: colorPicker }]);
-    setDose(types);
-    setColorPicker(typesColors);
+    let data = {
+      colors: [...sharedData.colors, colorPicker],
+      doses: [...sharedData.doses, dose]
+    };
+    props.sharedData(data);
+    handleBack();
   };
 
   const finish = () => {
-    console.log('finish');
-
-    let baseLayer = mapContext.getLayerByGroup('prescripcion_capa_base');
     let geoBaseLayer = baseLayer.layer.toGeoJSON();
+    let doses = [...sharedData.doses, dose];
+    let colors = [...sharedData.colors, colorPicker];
 
     rows.forEach(element => {
       turf.featureEach(geoBaseLayer, function(currentFeature, featureIndex) {
         if (element.class === currentFeature.properties.Class) {
           geoBaseLayer.features[featureIndex].properties = {};
-          geoBaseLayer.features[featureIndex].properties.treatment =
-            sharedData.treatment;
-          geoBaseLayer.features[featureIndex].properties.unit = sharedData.unit;
-          geoBaseLayer.features[featureIndex].properties.input =
-            sharedData.input;
 
-          /*if (canals) {
-            canals.forEach(function(item, index) {
-              geoBaseLayer.features[featureIndex].properties.dose =
-                item.doses[element.name];
-              geoBaseLayer.features[featureIndex].properties.color =
-                item.colors[element.name];
-            });
-          } else {*/
-          geoBaseLayer.features[featureIndex].properties.dose =
-            dose[element.name];
-          geoBaseLayer.features[featureIndex].properties.color =
-            colorPicker[element.name];
-          /* }*/
+          sharedData.treatment.forEach(function(item, index) {
+            geoBaseLayer.features[featureIndex].properties[
+              'treatment ' + index
+            ] = sharedData.treatment[index];
+            geoBaseLayer.features[featureIndex].properties['unit ' + index] =
+              sharedData.unit[index];
+            geoBaseLayer.features[featureIndex].properties['input ' + index] =
+              sharedData.input[index];
+            geoBaseLayer.features[featureIndex].properties['dose ' + index] =
+              doses[index][element.name];
+            geoBaseLayer.features[featureIndex].properties['color ' + index] =
+              colors[index][element.name];
+          });
         }
       });
     });
-
     console.log(geoBaseLayer);
-
+    download(
+      JSON.stringify(geoBaseLayer),
+      'result_prescription.geojson',
+      'text/plain'
+    );
     handleComplete();
   };
-
-  useEffect(() => {
-    console.log(canals);
-  }, [canals]);
 
   return (
     <>
@@ -295,10 +263,10 @@ const StepSecond = props => {
                   Zona
                 </TableCell>
                 <TableCell align="center" style={{ padding: 10 }}>
-                  Dosis ({sharedData.unit})
+                  Dosis ({sharedData.unit.slice(-1)[0]})
                 </TableCell>
                 <TableCell align="center" style={{ padding: 10 }}>
-                  {iconPalette}
+                  <FontAwesomeIcon icon={faPalette} />
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -374,7 +342,7 @@ const StepSecond = props => {
         </Grid>
         <Grid item xs={6}>
           <Typography component="label" variant="body2">
-            {sharedData.treatment}
+            {sharedData.treatment.slice(-1)[0]}
           </Typography>
         </Grid>
       </Grid>
@@ -386,7 +354,7 @@ const StepSecond = props => {
         </Grid>
         <Grid item xs={6}>
           <Typography component="label" variant="body2">
-            {sharedData.input}
+            {sharedData.input.slice(-1)[0]}
           </Typography>
         </Grid>
       </Grid>
@@ -398,7 +366,7 @@ const StepSecond = props => {
         </Grid>
         <Grid item xs={6}>
           <Typography component="label" variant="body2">
-            {average} {sharedData.unit}
+            {average} {sharedData.unit.slice(-1)[0]}
           </Typography>
         </Grid>
       </Grid>
@@ -410,21 +378,8 @@ const StepSecond = props => {
         </Grid>
         <Grid item xs={6}>
           <Typography component="label" variant="body2">
-            {total} {sharedData.unit.substring(0, 2)}
+            {total} {/*sharedData.unit.slice(-1)[0].substring(0, 2)*/}
           </Typography>
-        </Grid>
-      </Grid>
-      <Grid container className={classes.grid}>
-        <Grid item xs={12}>
-          <Button
-            size="small"
-            onClick={addCanal}
-            variant="outlined"
-            color="primary"
-          >
-            Canal
-            <FontAwesomeIcon icon={faPlus} style={{ marginLeft: 5 }} />
-          </Button>
         </Grid>
       </Grid>
 
@@ -434,18 +389,14 @@ const StepSecond = props => {
         position="static"
         activeStep={activeStep}
         nextButton={
-          <Button
-            size="small"
-            onClick={finish}
-            //disabled={!layerName || !mode || !field}
-          >
+          <Button size="small" onClick={finish} disabled={disableNext}>
             Finalizar
           </Button>
         }
         backButton={
-          <Button size="small" onClick={handleBack}>
-            <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 5 }} />
-            Atras
+          <Button size="small" onClick={addCanal} disabled={disableNext}>
+            <FontAwesomeIcon icon={faPlus} style={{ marginRight: 5 }} />
+            Canal
           </Button>
         }
       />

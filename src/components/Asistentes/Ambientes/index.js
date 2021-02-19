@@ -68,6 +68,7 @@ const Ambientes = props => {
       mapContext.removeVectorGroup('ambientes_capa_base');
       mapContext.toggleSelected(true);
     };
+    // eslint-disable-next-line
   }, []);
 
   const handleNext = () => {

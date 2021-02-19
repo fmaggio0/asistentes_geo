@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { faHandPointer } from '@fortawesome/pro-light-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Grid from '@material-ui/core/Grid';
@@ -27,7 +24,7 @@ const baseLayers = [
 
 const SelectBaseLayer = props => {
   const classes = useStyles();
-  const [selectedBaseLayer, setSelectedBaseLayer] = useState('');
+  const [selectedBaseLayer, setSelectedBaseLayer] = useState(props.value || '');
   const [baseLayer, setBaseLayer] = useState([]);
   const mapContext = useContext(MapContext);
 
@@ -56,6 +53,7 @@ const SelectBaseLayer = props => {
           fullWidth
           onChange={e => setSelectedBaseLayer(e.target.value)}
           value={selectedBaseLayer}
+          disabled={props.disabled}
         >
           {baseLayer &&
             baseLayer.map(row => (
