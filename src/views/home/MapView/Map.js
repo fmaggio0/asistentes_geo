@@ -291,9 +291,12 @@ const Map = props => {
   };
 
   const removeVectorGroup = groupName => {
-    let found = vectorLayersRef.current.find(e => e.name === groupName);
-    if (found) {
-      map.removeLayer(found.layer);
+    let found = vectorLayersRef.current.filter(e => e.name === groupName);
+    console.log(found);
+    if (found.length > 0) {
+      found.forEach(element => {
+        map.removeLayer(element.layer);
+      });
 
       /*setState(prevState => ({
         vectorLayers: prevState.vectorLayers.filter(

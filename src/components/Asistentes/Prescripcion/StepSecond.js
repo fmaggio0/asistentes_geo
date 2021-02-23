@@ -211,7 +211,8 @@ const StepSecond = props => {
   const addCanal = () => {
     let data = {
       colors: [...sharedData.colors, colorPicker],
-      doses: [...sharedData.doses, dose]
+      doses: [...sharedData.doses, dose],
+      addCanal: true
     };
     props.sharedData(data);
     handleBack();
